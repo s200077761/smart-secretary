@@ -61,3 +61,10 @@
 - [x] Implement haptic feedback
 - [x] Add loading states
 - [x] RTL support for Arabic
+
+
+## Repository Setup
+- [ ] Create GitHub repository
+- [ ] Push code to GitHub
+- [ ] Create Hugging Face repository
+- [ ] Push code to Hugging Face
