@@ -1,12 +1,11 @@
 // Fallback for using MaterialIcons on Android and web.
 
 import MaterialIcons from "@expo/vector-icons/MaterialIcons";
-import { SymbolWeight, SymbolViewProps } from "expo-symbols";
+import { SymbolWeight } from "expo-symbols";
 import { ComponentProps } from "react";
 import { OpaqueColorValue, type StyleProp, type TextStyle } from "react-native";
 
-type IconMapping = Record<SymbolViewProps["name"], ComponentProps<typeof MaterialIcons>["name"]>;
-type IconSymbolName = keyof typeof MAPPING;
+type MaterialIconName = ComponentProps<typeof MaterialIcons>["name"];
 
 /**
  * Add your SF Symbols to Material Icons mappings here.
@@ -14,11 +13,35 @@ type IconSymbolName = keyof typeof MAPPING;
  * - see SF Symbols in the [SF Symbols](https://developer.apple.com/sf-symbols/) app.
  */
 const MAPPING = {
+  // Tab bar icons
   "house.fill": "home",
-  "paperplane.fill": "send",
+  "person.3.fill": "groups",
+  "magnifyingglass": "search",
   "chevron.left.forwardslash.chevron.right": "code",
+  "gearshape.fill": "settings",
+  // Additional icons
+  "paperplane.fill": "send",
   "chevron.right": "chevron-right",
-} as IconMapping;
+  "xmark": "close",
+  "plus": "add",
+  "doc.text": "description",
+  "calendar": "event",
+  "envelope": "email",
+  "chart.bar": "bar-chart",
+  "brain": "psychology",
+  "sparkles": "auto-awesome",
+  "copy": "content-copy",
+  "trash": "delete",
+  "moon": "dark-mode",
+  "sun.max": "light-mode",
+  "globe": "language",
+  "info.circle": "info",
+  "arrow.clockwise": "refresh",
+  "mic": "mic",
+  "stop.fill": "stop",
+} satisfies Record<string, MaterialIconName>;
+
+type IconSymbolName = keyof typeof MAPPING;
 
 /**
  * An icon component that uses native SF Symbols on iOS, and Material Icons on Android and web.
