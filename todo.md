@@ -61,3 +61,53 @@
 - [x] Implement haptic feedback
 - [x] Add loading states
 - [x] RTL support for Arabic
+
+
+## Voice Input Feature
+- [x] Install expo-speech and expo-av packages
+- [x] Create voice input service
+- [x] Implement speech-to-text conversion
+- [ ] Add voice recording UI with visual feedback
+- [ ] Test voice input on iOS and Android
+
+## Chat History & Persistence
+- [x] Create chat history service
+- [x] Implement save chat message to database
+- [ ] Build chat history screen
+- [x] Add search in chat history
+- [x] Create export chat feature
+- [x] Add delete conversation option
+
+## In-App Purchase System
+- [x] Design token/unit pricing structure
+- [x] Create IAP service layer
+- [ ] Implement purchase flow (iOS & Android)
+- [ ] Build subscription management UI
+- [ ] Add token balance display
+- [x] Create usage tracking system
+- [x] Implement token consumption on API calls
+
+## Multiple AI Providers Support
+- [x] Add GLM-4.7 (Z.ai) API integration
+- [ ] Create AI provider selector in settings
+- [x] Implement provider switching logic
+- [x] Add fallback provider support
+- [x] Create provider-specific prompts
+- [ ] Test all provider integrations
+
+## Payment & Billing
+- [ ] Integrate RevenueCat or similar service
+- [ ] Set up Apple App Store billing
+- [ ] Set up Google Play Store billing
+- [ ] Create billing history screen
+- [ ] Add receipt validation
+- [ ] Implement refund handling
+
+## Testing & Deployment
+- [ ] Write tests for voice input
+- [ ] Write tests for chat history
+- [ ] Write tests for IAP system
+- [ ] Write tests for provider switching
+- [ ] Create APK build
+- [ ] Create IPA build
+- [ ] Test on real devices
