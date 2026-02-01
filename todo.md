@@ -120,3 +120,15 @@
 - [ ] Create APK build
 - [ ] Create IPA build
 - [ ] Test on real devices
+
+
+## Payment Integration
+- [x] Integrate RevenueCat for Apple Pay
+- [x] Integrate Google Play Billing
+- [x] Integrate Stripe for Visa/Mastercard
+- [x] Add Mada (Saudi card) support
+- [x] Integrate Samsung Pay
+- [x] Create unified payment UI
+- [x] Add payment error handling
+- [x] Create Payment Method Selector component
+- [x] Update Token Shop with payment integration
