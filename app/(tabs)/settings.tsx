@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import {
   View,
   Text,
@@ -15,6 +15,9 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useChat } from "@/lib/chat-context";
+import { ProviderSelector } from "@/components/provider-selector";
+import { TokenBalance } from "@/components/token-balance";
+import { TokenShop } from "@/components/token-shop";
 import * as Haptics from "expo-haptics";
 
 const SETTINGS_KEY = "smart_secretary_settings";
@@ -29,10 +32,13 @@ const defaultSettings: Settings = {
   responseStyle: "detailed",
 };
 
+type SettingsTab = "general" | "providers" | "tokens" | "shop";
+
 export default function SettingsScreen() {
   const colors = useColors();
   const { clearMessages } = useChat();
   const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [activeTab, setActiveTab] = useState<SettingsTab>("general");
 
   useEffect(() => {
     loadSettings();
@@ -140,78 +146,99 @@ export default function SettingsScreen() {
         <Text style={[styles.headerTitle, { color: colors.foreground }]}>الإعدادات</Text>
       </View>
 
-      <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
-        {/* AI Settings Section */}
-        <Text style={[styles.sectionTitle, { color: colors.muted }]}>إعدادات الذكاء الاصطناعي</Text>
-        <View style={styles.section}>
-          {renderSettingItem({
-            icon: "sparkles",
-            title: "أسلوب الرد",
-            subtitle: settings.responseStyle === "concise" ? "موجز" : "مفصل",
-            onPress: handleResponseStyleChange,
-            rightElement: (
-              <View style={[styles.badge, { backgroundColor: colors.primary + "20" }]}>
-                <Text style={[styles.badgeText, { color: colors.primary }]}>
-                  {settings.responseStyle === "concise" ? "موجز" : "مفصل"}
-                </Text>
-              </View>
-            ),
-          })}
-        </View>
+      {/* Tab Navigation */}
+      <View style={[styles.tabBar, { borderBottomColor: colors.border, backgroundColor: colors.background }]}>
+        {(["general", "providers", "tokens", "shop"] as SettingsTab[]).map((tab) => (
+          <Pressable
+            key={tab}
+            onPress={() => setActiveTab(tab)}
+            style={({ pressed }) => [
+              styles.tab,
+              activeTab === tab && { borderBottomColor: colors.primary, borderBottomWidth: 2 },
+              pressed && { opacity: 0.7 },
+            ]}
+          >
+            <Text
+              style={[
+                styles.tabText,
+                { color: activeTab === tab ? colors.primary : colors.muted },
+              ]}
+            >
+              {tab === "general" && "عام"}
+              {tab === "providers" && "المزودون"}
+              {tab === "tokens" && "الرموز"}
+              {tab === "shop" && "المتجر"}
+            </Text>
+          </Pressable>
+        ))}
+      </View>
 
-        {/* App Settings Section */}
-        <Text style={[styles.sectionTitle, { color: colors.muted }]}>إعدادات التطبيق</Text>
-        <View style={styles.section}>
-          {renderSettingItem({
-            icon: "moon",
-            title: "الاهتزاز اللمسي",
-            subtitle: "تفعيل الاهتزاز عند التفاعل",
-            rightElement: (
-              <Switch
-                value={settings.enableHaptics}
-                onValueChange={handleToggleHaptics}
-                trackColor={{ false: colors.border, true: colors.primary + "80" }}
-                thumbColor={settings.enableHaptics ? colors.primary : colors.muted}
-              />
-            ),
-          })}
-        </View>
+      {/* Content */}
+      {activeTab === "general" && (
+        <ScrollView style={styles.content} contentContainerStyle={styles.contentInner}>
+          {/* AI Settings Section */}
+          <Text style={[styles.sectionTitle, { color: colors.muted }]}>إعدادات الذكاء الاصطناعي</Text>
+          <View style={styles.section}>
+            {renderSettingItem({
+              icon: "sparkles",
+              title: "أسلوب الرد",
+              subtitle: settings.responseStyle === "concise" ? "موجز" : "مفصل",
+              onPress: handleResponseStyleChange,
+              rightElement: (
+                <View style={[styles.badge, { backgroundColor: colors.primary + "20" }]}>
+                  <Text style={[styles.badgeText, { color: colors.primary }]}>
+                    {settings.responseStyle === "concise" ? "موجز" : "مفصل"}
+                  </Text>
+                </View>
+              ),
+            })}
+          </View>
 
-        {/* Data Section */}
-        <Text style={[styles.sectionTitle, { color: colors.muted }]}>البيانات</Text>
-        <View style={styles.section}>
-          {renderSettingItem({
-            icon: "trash",
-            title: "مسح سجل المحادثات",
-            subtitle: "حذف جميع المحادثات السابقة",
-            onPress: handleClearHistory,
-            destructive: true,
-          })}
-        </View>
+          {/* App Settings Section */}
+          <Text style={[styles.sectionTitle, { color: colors.muted }]}>إعدادات التطبيق</Text>
+          <View style={styles.section}>
+            {renderSettingItem({
+              icon: "moon",
+              title: "الاهتزاز اللمسي",
+              subtitle: "تفعيل الاهتزاز عند التفاعل",
+              rightElement: (
+                <Switch
+                  value={settings.enableHaptics}
+                  onValueChange={handleToggleHaptics}
+                  trackColor={{ false: colors.border, true: colors.primary + "80" }}
+                  thumbColor={settings.enableHaptics ? colors.primary : colors.muted}
+                />
+              ),
+            })}
+          </View>
 
-        {/* About Section */}
-        <Text style={[styles.sectionTitle, { color: colors.muted }]}>حول التطبيق</Text>
-        <View style={styles.section}>
-          {renderSettingItem({
-            icon: "info.circle",
-            title: "السكرتير الذكي",
-            subtitle: "الإصدار 1.0.0",
-          })}
-        </View>
+          {/* Data Section */}
+          <Text style={[styles.sectionTitle, { color: colors.muted }]}>البيانات</Text>
+          <View style={styles.section}>
+            {renderSettingItem({
+              icon: "trash",
+              title: "مسح سجل المحادثات",
+              subtitle: "حذف جميع المحادثات السابقة",
+              onPress: handleClearHistory,
+              destructive: true,
+            })}
+          </View>
 
-        {/* App Description */}
-        <View style={[styles.descriptionCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.descriptionTitle, { color: colors.foreground }]}>
-            السكرتير الذكي
-          </Text>
-          <Text style={[styles.descriptionText, { color: colors.muted }]}>
-            مساعدك الذكي الشخصي للمهام اليومية. يوفر التطبيق خدمات الدردشة الذكية، الوكلاء المتخصصين، البحث المعزز بالذكاء الاصطناعي، ومساعد الكود البرمجي.
-          </Text>
-          <Text style={[styles.descriptionText, { color: colors.muted, marginTop: 8 }]}>
-            مدعوم بتقنية Google Gemini AI
-          </Text>
-        </View>
-      </ScrollView>
+          {/* About Section */}
+          <Text style={[styles.sectionTitle, { color: colors.muted }]}>حول التطبيق</Text>
+          <View style={styles.section}>
+            {renderSettingItem({
+              icon: "info.circle",
+              title: "السكرتير الذكي",
+              subtitle: "الإصدار 1.0.0",
+            })}
+          </View>
+        </ScrollView>
+      )}
+
+      {activeTab === "providers" && <ProviderSelector />}
+      {activeTab === "tokens" && <TokenBalance />}
+      {activeTab === "shop" && <TokenShop />}
     </ScreenContainer>
   );
 }
@@ -220,83 +247,80 @@ const styles = StyleSheet.create({
   header: {
     paddingHorizontal: 16,
     paddingVertical: 12,
-    borderBottomWidth: 0.5,
-    alignItems: "center",
+    borderBottomWidth: 1,
   },
   headerTitle: {
-    fontSize: 20,
-    fontWeight: "700",
+    fontSize: 24,
+    fontWeight: "bold",
+  },
+  tabBar: {
+    flexDirection: "row",
+    borderBottomWidth: 1,
+    paddingHorizontal: 0,
+  },
+  tab: {
+    flex: 1,
+    paddingVertical: 12,
+    paddingHorizontal: 8,
+    alignItems: "center",
+    borderBottomWidth: 2,
+    borderBottomColor: "transparent",
+  },
+  tabText: {
+    fontSize: 12,
+    fontWeight: "600",
   },
   content: {
     flex: 1,
   },
   contentInner: {
-    padding: 16,
-    paddingBottom: 40,
+    paddingHorizontal: 16,
+    paddingVertical: 16,
+    gap: 24,
   },
   sectionTitle: {
-    fontSize: 13,
+    fontSize: 12,
     fontWeight: "600",
-    marginBottom: 8,
-    marginTop: 16,
-    textAlign: "right",
     textTransform: "uppercase",
+    letterSpacing: 0.5,
   },
   section: {
-    gap: 8,
+    gap: 12,
   },
   settingItem: {
     flexDirection: "row",
     alignItems: "center",
-    padding: 12,
+    paddingHorizontal: 16,
+    paddingVertical: 12,
     borderRadius: 12,
     borderWidth: 1,
     gap: 12,
   },
   iconContainer: {
-    width: 36,
-    height: 36,
+    width: 40,
+    height: 40,
     borderRadius: 8,
     alignItems: "center",
     justifyContent: "center",
   },
   settingContent: {
     flex: 1,
+    gap: 4,
   },
   settingTitle: {
-    fontSize: 15,
-    fontWeight: "500",
-    textAlign: "right",
+    fontSize: 14,
+    fontWeight: "600",
   },
   settingSubtitle: {
-    fontSize: 13,
-    marginTop: 2,
-    textAlign: "right",
+    fontSize: 12,
   },
   badge: {
-    paddingHorizontal: 10,
+    paddingHorizontal: 8,
     paddingVertical: 4,
     borderRadius: 6,
   },
   badgeText: {
     fontSize: 12,
     fontWeight: "600",
-  },
-  descriptionCard: {
-    marginTop: 24,
-    padding: 16,
-    borderRadius: 12,
-    borderWidth: 1,
-    alignItems: "center",
-  },
-  descriptionTitle: {
-    fontSize: 18,
-    fontWeight: "700",
-    marginBottom: 8,
-  },
-  descriptionText: {
-    fontSize: 14,
-    lineHeight: 22,
-    textAlign: "center",
   },
 });

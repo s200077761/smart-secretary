@@ -54,6 +54,13 @@
 - [x] Implement web search integration
 - [x] Build code generation prompts
 
+## UI Components for Settings
+- [x] Build Provider Selector component
+- [x] Build Token Balance Display component
+- [x] Build Token Shop component
+- [x] Integrate components into Settings screen
+- [x] Add tab navigation for Settings
+
 ## Branding & Polish
 - [x] Generate custom app logo
 - [x] Update app icons
