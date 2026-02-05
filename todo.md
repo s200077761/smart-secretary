@@ -132,3 +132,20 @@
 - [x] Add payment error handling
 - [x] Create Payment Method Selector component
 - [x] Update Token Shop with payment integration
+
+
+## Advanced File Handling & Document Processing
+- [x] File upload service
+- [x] Camera image capture
+- [x] OCR (Optical Character Recognition)
+- [x] PDF to Word conversion
+- [x] PDF to RTF conversion
+- [x] PDF to HTML conversion
+- [x] Text editing and correction
+- [x] Digital signatures
+- [x] Email integration
+- [x] File download from chat
+- [x] Text-to-speech
+- [x] Speech-to-text
+- [ ] File management UI
+- [ ] Document viewer
