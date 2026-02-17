@@ -60,8 +60,10 @@ describe('Chat History Service', () => {
   it.skipIf(isNativeEnvironment)('should add message to session', async () => {
     const session = await createChatSession('Test');
     await addMessageToSession(session.id, {
+      id: Date.now().toString(),
       role: 'user',
       content: 'Hello',
+      timestamp: new Date(),
     });
 
     const updated = await getChatSession(session.id);
@@ -80,8 +82,10 @@ describe('Chat History Service', () => {
   it.skipIf(isNativeEnvironment)('should search chat history', async () => {
     const session = await createChatSession('Search Test');
     await addMessageToSession(session.id, {
+      id: Date.now().toString(),
       role: 'user',
       content: 'Hello world',
+      timestamp: new Date(),
     });
 
     const results = await searchChatHistory('world');

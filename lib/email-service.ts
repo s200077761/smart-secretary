@@ -51,7 +51,7 @@ export async function sendEmail(options: EmailOptions): Promise<boolean> {
       subject: options.subject,
       body: options.body,
       attachments: options.attachments?.map(att => att.uri),
-      isHTML: options.isHTML || false,
+      isHtml: options.isHTML || false,
     });
 
     return result.status === MailComposer.MailComposerStatus.SENT;
