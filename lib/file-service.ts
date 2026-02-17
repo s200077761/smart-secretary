@@ -1,6 +1,6 @@
 import * as ImagePicker from 'expo-image-picker';
 import * as DocumentPicker from 'expo-document-picker';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 import { Platform } from 'react-native';
 
 export interface FileData {
@@ -161,8 +161,8 @@ export async function downloadFile(url: string, fileName: string): Promise<strin
       filePath,
       {},
       (downloadProgress) => {
-        const progress = downloadProgress.totalBytesExpectedToDownload
-          ? downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToDownload
+        const progress = downloadProgress.totalBytesExpectedToWrite
+          ? downloadProgress.totalBytesWritten / downloadProgress.totalBytesExpectedToWrite
           : 0;
         console.log(`Download progress: ${Math.round(progress * 100)}%`);
       }

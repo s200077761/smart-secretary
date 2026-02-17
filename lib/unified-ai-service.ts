@@ -87,8 +87,10 @@ export async function executeAgentTaskWithProvider(
 
     const messages: ChatMessage[] = [
       {
+        id: Date.now().toString(),
         role: 'user',
         content: userInput,
+        timestamp: new Date(),
       },
     ];
 
@@ -140,8 +142,10 @@ Respond in the same language as the query.`;
 
     const messages: ChatMessage[] = [
       {
+        id: Date.now().toString(),
         role: 'user',
         content: `Query: ${query}\n\nSearch Results:\n${searchResults}\n\nPlease provide a helpful summary of these results.`,
+        timestamp: new Date(),
       },
     ];
 
@@ -221,8 +225,10 @@ Use clear, simple language suitable for learners.`,
 
     const messages: ChatMessage[] = [
       {
+        id: Date.now().toString(),
         role: 'user',
         content: input,
+        timestamp: new Date(),
       },
     ];
 

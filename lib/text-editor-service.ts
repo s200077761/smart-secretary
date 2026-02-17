@@ -162,8 +162,8 @@ export async function getSuggestions(text: string): Promise<string[]> {
 
     const suggestions = result.response.text()
       .split('\n')
-      .filter(line => line.trim())
-      .map(line => line.replace(/^\d+\.\s*/, ''));
+      .filter((line: string) => line.trim())
+      .map((line: string) => line.replace(/^\d+\.\s*/, ''));
 
     return suggestions;
   } catch (error) {

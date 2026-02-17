@@ -75,4 +75,5 @@ export interface AppSettings {
 export interface AIResponse {
   content: string;
   error?: string;
+  provider?: string;
 }

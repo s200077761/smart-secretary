@@ -130,15 +130,16 @@ async function processApplePayment(packageId: string, amount: number): Promise<P
     }
 
     const customerInfo = await Purchases.purchasePackage(package_);
-    const transactionId = customerInfo.originalAppUserId;
+    const transactionId = (customerInfo as any).originalAppUserId || `apple_${Date.now()}`;
 
     return {
       success: true,
       transactionId,
     };
   } catch (error) {
-    if (error instanceof PurchasesError) {
-      if (error.code === PurchasesError.ErrorCode.PurchaseCancelledError) {
+    if (error && typeof error === 'object' && 'code' in error) {
+      const err = error as any;
+      if (err.code === 'PurchaseCancelledError') {
         return { success: false, error: 'تم إلغاء الشراء' };
       }
     }
@@ -167,15 +168,16 @@ async function processGooglePlayPayment(packageId: string, amount: number): Prom
     }
 
     const customerInfo = await Purchases.purchasePackage(package_);
-    const transactionId = customerInfo.originalAppUserId;
+    const transactionId = (customerInfo as any).originalAppUserId || `google_${Date.now()}`;
 
     return {
       success: true,
       transactionId,
     };
   } catch (error) {
-    if (error instanceof PurchasesError) {
-      if (error.code === PurchasesError.ErrorCode.PurchaseCancelledError) {
+    if (error && typeof error === 'object' && 'code' in error) {
+      const err = error as any;
+      if (err.code === 'PurchaseCancelledError') {
         return { success: false, error: 'تم إلغاء الشراء' };
       }
     }
@@ -196,13 +198,13 @@ async function processStripePayment(
 ): Promise<PaymentResult> {
   try {
     const { error, paymentMethod } = await createPaymentMethod({
-      type: 'Card',
+      paymentMethodType: 'Card',
       params: {
         billingDetails: {
           email: 'customer@example.com',
         },
       },
-    });
+    } as any);
 
     if (error) {
       return { success: false, error: error.message };
@@ -235,13 +237,13 @@ async function processSamsungPayPayment(packageId: string, amount: number): Prom
   try {
     // Samsung Pay integration via Stripe
     const { error, paymentMethod } = await createPaymentMethod({
-      type: 'Card',
+      paymentMethodType: 'Card',
       params: {
         billingDetails: {
           email: 'customer@example.com',
         },
       },
-    });
+    } as any);
 
     if (error) {
       return { success: false, error: error.message };

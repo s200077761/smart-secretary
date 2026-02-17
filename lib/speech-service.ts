@@ -1,5 +1,5 @@
 import * as Speech from 'expo-speech';
-import * as FileSystem from 'expo-file-system';
+import * as FileSystem from 'expo-file-system/legacy';
 
 /**
  * Speech Service - Text-to-speech and speech-to-text conversion
