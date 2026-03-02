@@ -22,5 +22,6 @@ def get_vision_llm(temperature: float = 0.3) -> ChatOpenAI:
         api_key=settings.HF_TOKEN,
         base_url=HF_BASE_URL,
         temperature=temperature,
-        max_tokens=1024,
+        max_tokens=2048,
+        timeout=120,
     )

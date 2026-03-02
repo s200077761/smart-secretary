@@ -248,9 +248,39 @@ async def setup(webhook_url: str | None = None) -> None:
     if not settings.TELEGRAM_TOKEN:
         logger.info("No TELEGRAM_TOKEN — Telegram bot disabled.")
         return
+
+    token = settings.TELEGRAM_TOKEN
+
+    if webhook_url:
+        full_webhook = f"{webhook_url.rstrip('/')}/api/webhook/telegram"
+        async with httpx.AsyncClient(timeout=15) as client:
+            try:
+                r = await client.post(
+                    f"https://api.telegram.org/bot{token}/setWebhook",
+                    json={"url": full_webhook, "drop_pending_updates": True},
+                )
+                data = r.json()
+                if data.get("ok"):
+                    logger.info("Telegram webhook registered: %s", full_webhook)
+                else:
+                    logger.error("Telegram setWebhook failed: %s", data)
+            except Exception as exc:
+                logger.exception("setWebhook error: %s", exc)
+    else:
+        # Delete any existing webhook (polling mode fallback)
+        async with httpx.AsyncClient(timeout=15) as client:
+            try:
+                await client.post(
+                    f"https://api.telegram.org/bot{token}/deleteWebhook",
+                    json={"drop_pending_updates": True},
+                )
+                logger.info("Telegram webhook removed (no SERVER_URL set).")
+            except Exception as exc:
+                logger.exception("deleteWebhook error: %s", exc)
+
     if settings.ADMIN_CHAT_ID:
         logger.info("Admin monitoring enabled for chat_id=%s", settings.ADMIN_CHAT_ID)
-    logger.info("Telegram bot ready (inline-response mode).")
+    logger.info("Telegram bot ready.")
 
 
 async def handle_update(body: dict) -> dict | None:
