@@ -1,9 +1,13 @@
 """Telegram Bot — webhook inline-response mode (simplified, no Markdown)."""
 
+import base64
 import logging
+
+import httpx
 from langchain.schema import HumanMessage, SystemMessage
+
 from app.config import settings
-from app.llm import get_llm
+from app.llm import get_llm, get_vision_llm
 from app.agents.manus_agent import run_manus_agent
 
 logger = logging.getLogger(__name__)
@@ -11,6 +15,16 @@ logger = logging.getLogger(__name__)
 SYSTEM_PROMPT = (
     "أنت السكرتير الذكي، مساعد شخصي يتحدث العربية حصراً. "
     "كن مفيداً وموجزاً. لا تستخدم الإنجليزية إلا إذا طُلب منك ذلك."
+)
+
+IRIS_PROMPT = (
+    "أنت خبير في تحليل قزحية العين. حلل هذه الصورة بدقة وأعطِ:\n"
+    "1. لون القزحية وتدرجاته\n"
+    "2. الأنماط والخطوط المميزة\n"
+    "3. حجم البؤبؤ وشكله\n"
+    "4. أي مميزات أو ملاحظات خاصة\n"
+    "5. تقييم الحالة العامة للعين\n\n"
+    "قدّم التحليل باللغة العربية."
 )
 
 
@@ -21,6 +35,35 @@ def _reply(chat_id: int, text: str) -> dict:
         "chat_id": chat_id,
         "text": text[:4096],
     }
+
+
+async def _download_photo(file_id: str) -> bytes:
+    """Download photo bytes from Telegram."""
+    token = settings.TELEGRAM_TOKEN
+    async with httpx.AsyncClient(timeout=30) as client:
+        r = await client.get(
+            f"https://api.telegram.org/bot{token}/getFile",
+            params={"file_id": file_id},
+        )
+        r.raise_for_status()
+        file_path = r.json()["result"]["file_path"]
+        r2 = await client.get(
+            f"https://api.telegram.org/file/bot{token}/{file_path}"
+        )
+        r2.raise_for_status()
+        return r2.content
+
+
+async def _analyze_iris(image_bytes: bytes) -> str:
+    """Use vision LLM to analyze iris image."""
+    b64 = base64.b64encode(image_bytes).decode()
+    llm = get_vision_llm()
+    msg = HumanMessage(content=[
+        {"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{b64}"}},
+        {"type": "text", "text": IRIS_PROMPT},
+    ])
+    response = await llm.ainvoke([msg])
+    return str(response.content)
 
 
 async def setup(webhook_url: str | None = None) -> None:
@@ -39,10 +82,25 @@ async def handle_update(body: dict) -> dict | None:
         return None
 
     chat_id: int = message["chat"]["id"]
-    text: str = message.get("text", "").strip()
 
+    # ── Photo: iris analysis ──────────────────────────────────────────────────
+    if "photo" in message:
+        photos = message["photo"]
+        file_id = photos[-1]["file_id"]  # largest available size
+        caption = message.get("caption", "").strip()
+        try:
+            image_bytes = await _download_photo(file_id)
+            analysis = await _analyze_iris(image_bytes)
+            prefix = f"ملاحظة: {caption}\n\n" if caption else ""
+            return _reply(chat_id, f"تحليل قزحية العين:\n\n{prefix}{analysis}")
+        except Exception as exc:
+            logger.exception("Iris analysis error: %s", exc)
+            return _reply(chat_id, f"تعذّر تحليل الصورة: {exc}")
+
+    # ── Text commands ─────────────────────────────────────────────────────────
+    text: str = message.get("text", "").strip()
     if not text:
-        return None
+        return _reply(chat_id, "أرسل صورة قزحية العين أو اكتب رسالتك.")
 
     if text in ("/start", "/start@ZizomBot"):
         return _reply(
@@ -50,6 +108,7 @@ async def handle_update(body: dict) -> dict | None:
             "مرحباً بك في السكرتير الذكي!\n\n"
             "أنا مساعدك الشخصي المدعوم بالذكاء الاصطناعي.\n\n"
             "الأوامر المتاحة:\n"
+            "- أرسل صورة قزحية عين لتحليلها\n"
             "- أرسل أي سؤال مباشرةً\n"
             "- /agent <المهمة> لتشغيل الوكيل\n"
             "- /help لعرض المساعدة",
@@ -58,7 +117,11 @@ async def handle_update(body: dict) -> dict | None:
     if text in ("/help", "/help@ZizomBot"):
         return _reply(
             chat_id,
-            "الأوامر:\n/start - بدء المحادثة\n/agent <مهمة> - وكيل مستقل\n/help - هذه الرسالة",
+            "الأوامر:\n"
+            "/start - بدء المحادثة\n"
+            "/agent <مهمة> - وكيل مستقل\n"
+            "/help - هذه الرسالة\n\n"
+            "يمكنك أيضاً إرسال صورة قزحية العين لتحليلها.",
         )
 
     if text.startswith("/agent"):
@@ -76,7 +139,7 @@ async def handle_update(body: dict) -> dict | None:
     if text.startswith("/"):
         return None
 
-    # Plain text chat
+    # ── Plain text chat ───────────────────────────────────────────────────────
     try:
         llm = get_llm(temperature=0.7)
         messages = [
