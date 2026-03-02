@@ -11,7 +11,7 @@ class Settings(BaseSettings):
     # ── AI — HuggingFace Inference API (OpenAI-compatible) ───────────────────
     HF_TOKEN: str = ""
     HF_MODEL: str = "Qwen/Qwen2.5-7B-Instruct"
-    VISION_MODEL: str = "Qwen/Qwen2-VL-7B-Instruct"
+    VISION_MODEL: str = "Qwen/Qwen2.5-VL-7B-Instruct"
 
     # ── Firebase ─────────────────────────────────────────────────────────────
     FIREBASE_CREDENTIALS_PATH: Optional[str] = None
