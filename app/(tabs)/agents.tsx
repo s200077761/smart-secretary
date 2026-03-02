@@ -17,6 +17,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenContainer } from "@/components/screen-container";
 import { AgentCard } from "@/components/agent-card";
 import { IconSymbol } from "@/components/ui/icon-symbol";
+import { ManusAgentView } from "@/components/manus-agent-view";
 import { useColors } from "@/hooks/use-colors";
 import { AGENTS, getAgentById } from "@/lib/agents-data";
 import { executeAgentTask } from "@/lib/ai-service";
@@ -27,12 +28,17 @@ export default function AgentsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
+  const [showManusModal, setShowManusModal] = useState(false);
   const [input, setInput] = useState("");
   const [output, setOutput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
   const handleAgentSelect = (agent: Agent) => {
+    if (agent.id === "manus") {
+      setShowManusModal(true);
+      return;
+    }
     setSelectedAgent(agent);
     setInput("");
     setOutput("");
@@ -91,6 +97,16 @@ export default function AgentsScreen() {
         contentContainerStyle={styles.grid}
         showsVerticalScrollIndicator={false}
       />
+
+      {/* Manus Agent Modal */}
+      <Modal
+        visible={showManusModal}
+        animationType="slide"
+        presentationStyle="pageSheet"
+        onRequestClose={() => setShowManusModal(false)}
+      >
+        <ManusAgentView onClose={() => setShowManusModal(false)} />
+      </Modal>
 
       {/* Agent Modal */}
       <Modal

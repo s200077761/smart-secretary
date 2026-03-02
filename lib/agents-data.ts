@@ -106,6 +106,16 @@ export const AGENTS: Agent[] = [
 
 ثم قم بتنفيذ المهمة بأفضل طريقة ممكنة.`,
   },
+  {
+    id: "manus",
+    name: "Manus Agent",
+    nameAr: "وكيل مانوس",
+    description: "Autonomous multi-step task execution",
+    descriptionAr: "تنفيذ المهام المعقدة خطوة بخطوة بشكل تلقائي",
+    icon: "cpu",
+    color: "#0EA5E9",
+    systemPrompt: "",
+  },
 ];
 
 export function getAgentById(id: string): Agent | undefined {

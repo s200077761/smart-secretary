@@ -1,0 +1,24 @@
+# Fly.io deployment configuration
+# Free tier: 3 shared-cpu VMs, 256 MB RAM each
+# Usage: fly launch --config deploy/fly.toml
+
+app = "smart-secretary-api"
+primary_region = "dxb"   # Dubai — closest to Arabic users
+
+[build]
+  dockerfile = "backend/Dockerfile"
+
+[env]
+  PORT = "8080"
+
+[http_service]
+  internal_port = 8080
+  force_https = true
+  auto_stop_machines = true
+  auto_start_machines = true
+  min_machines_running = 0
+
+[[vm]]
+  memory = "256mb"
+  cpu_kind = "shared"
+  cpus = 1
