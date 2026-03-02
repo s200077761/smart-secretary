@@ -112,7 +112,7 @@ export const AGENTS: Agent[] = [
     nameAr: "وكيل مانوس",
     description: "Autonomous multi-step task execution",
     descriptionAr: "تنفيذ المهام المعقدة خطوة بخطوة بشكل تلقائي",
-    icon: "cpu",
+    icon: "sparkles",
     color: "#0EA5E9",
     systemPrompt: "",
   },

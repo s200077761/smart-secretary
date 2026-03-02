@@ -3,8 +3,8 @@ import { AGENTS, getAgentById } from "../agents-data";
 
 describe("Agents Data", () => {
   describe("AGENTS", () => {
-    it("should have 6 agents defined", () => {
-      expect(AGENTS).toHaveLength(6);
+    it("should have 7 agents defined", () => {
+      expect(AGENTS).toHaveLength(7);
     });
 
     it("should have all required agent properties", () => {
@@ -51,10 +51,10 @@ describe("Agents Data", () => {
       expect(researchAgent?.nameAr).toBe("باحث المعلومات");
     });
 
-    it("should include custom agent", () => {
-      const customAgent = AGENTS.find((a) => a.id === "custom");
-      expect(customAgent).toBeDefined();
-      expect(customAgent?.nameAr).toBe("وكيل مخصص");
+    it("should include manus agent", () => {
+      const manusAgent = AGENTS.find((a) => a.id === "manus");
+      expect(manusAgent).toBeDefined();
+      expect(manusAgent?.nameAr).toBe("وكيل مانوس");
     });
   });
 
@@ -71,7 +71,7 @@ describe("Agents Data", () => {
     });
 
     it("should return correct agent for each ID", () => {
-      const agentIds = ["email", "calendar", "notes", "research", "data", "custom"];
+      const agentIds = ["email", "calendar", "notes", "research", "data", "custom", "manus"];
       
       agentIds.forEach((id) => {
         const agent = getAgentById(id);

@@ -38,8 +38,22 @@ async function callGemini(systemPrompt: string, userMessage: string, temperature
   });
 
   if (!res.ok) {
-    const err = await res.json();
-    throw new Error(err.error?.message || "Gemini API request failed");
+    let errBody: any;
+    let errText: string | undefined;
+    try {
+      errBody = await res.json();
+    } catch {
+      try {
+        errText = await res.text();
+      } catch {
+        // Ignore secondary parse errors; fall back to a generic message.
+      }
+    }
+    const message =
+      (errBody && (errBody.error?.message || errBody.message)) ||
+      errText ||
+      `Gemini API request failed with status ${res.status}`;
+    throw new Error(message);
   }
 
   const data = await res.json();
@@ -83,15 +97,46 @@ async function planTask(userTask: string): Promise<ManusStep[]> {
   const jsonMatch = raw.match(/\{[\s\S]*\}/);
   if (!jsonMatch) throw new Error("فشل في تحليل خطة المهمة.");
 
-  const parsed = JSON.parse(jsonMatch[0]) as { steps: { id: number; title: string; description: string }[] };
+  let planResponse: unknown;
+  try {
+    planResponse = JSON.parse(jsonMatch[0]);
+  } catch {
+    throw new Error("فشل في تحليل خطة المهمة: استجابة غير صالحة.");
+  }
 
-  return parsed.steps.map((s) => ({
-    id: s.id,
-    title: s.title,
-    description: s.description,
-    status: "pending" as const,
-    tool: detectTool(s.title, s.description),
-  }));
+  if (
+    typeof planResponse !== "object" ||
+    planResponse === null ||
+    !("steps" in planResponse) ||
+    !Array.isArray((planResponse as any).steps)
+  ) {
+    throw new Error("فشل في تحليل خطة المهمة: صيغة الخطة غير صحيحة.");
+  }
+
+  const steps = (planResponse as any).steps;
+
+  if (steps.length < 3 || steps.length > 6) {
+    throw new Error("فشل في تحليل خطة المهمة: يجب أن تحتوي الخطة على 3 إلى 6 خطوات.");
+  }
+
+  return steps.map((s: any) => {
+    if (
+      typeof s !== "object" ||
+      s === null ||
+      typeof s.id !== "number" ||
+      typeof s.title !== "string" ||
+      typeof s.description !== "string"
+    ) {
+      throw new Error("فشل في تحليل خطة المهمة: هيكل الخطوات غير صالح.");
+    }
+    return {
+      id: s.id,
+      title: s.title,
+      description: s.description,
+      status: "pending" as const,
+      tool: detectTool(s.title, s.description),
+    };
+  });
 }
 
 // ---------------------------------------------------------------------------
