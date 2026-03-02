@@ -60,3 +60,9 @@ Thumbs.db
 *.tgz
 *.tar.gz
 .cache/
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+.pytest_cache/
