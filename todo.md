@@ -66,5 +66,5 @@
 ## Repository Setup
 - [ ] Create GitHub repository
 - [ ] Push code to GitHub
-- [ ] Create Hugging Face repository
-- [ ] Push code to Hugging Face
+- [x] Create Hugging Face repository
+- [x] Push code to Hugging Face (https://huggingface.co/spaces/s200077761/smart-secretary)
