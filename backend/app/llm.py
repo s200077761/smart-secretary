@@ -1,16 +1,16 @@
-"""Shared LLM factory — ZhipuAI (z.ai) via OpenAI-compatible API."""
+"""Shared LLM factory — HuggingFace Inference API (OpenAI-compatible)."""
 
 from langchain_openai import ChatOpenAI
 from app.config import settings
 
-ZHIPU_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/"
+HF_BASE_URL = "https://router.huggingface.co/v1/"
 
 
 def get_llm(temperature: float = 0.7) -> ChatOpenAI:
     return ChatOpenAI(
-        model=settings.ZHIPU_MODEL,
-        api_key=settings.ZHIPU_API_KEY,
-        base_url=ZHIPU_BASE_URL,
+        model=settings.HF_MODEL,
+        api_key=settings.HF_TOKEN,
+        base_url=HF_BASE_URL,
         temperature=temperature,
-        max_tokens=4096,
+        max_tokens=2048,
     )

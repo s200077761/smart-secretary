@@ -8,9 +8,9 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    # ── AI — ZhipuAI (z.ai) ──────────────────────────────────────────────────
-    ZHIPU_API_KEY: str = ""
-    ZHIPU_MODEL: str = "glm-4-flash"
+    # ── AI — HuggingFace Inference API (OpenAI-compatible) ───────────────────
+    HF_TOKEN: str = ""
+    HF_MODEL: str = "Qwen/Qwen2.5-7B-Instruct"
 
     # ── Firebase ─────────────────────────────────────────────────────────────
     FIREBASE_CREDENTIALS_PATH: Optional[str] = None
