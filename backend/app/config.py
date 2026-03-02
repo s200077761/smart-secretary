@@ -21,6 +21,8 @@ class Settings(BaseSettings):
     TELEGRAM_TOKEN: Optional[str] = None
     # Full public URL of this server, e.g. https://myapp.onrender.com
     SERVER_URL: Optional[str] = None
+    # Admin chat ID — set to your Telegram chat ID to receive all conversations
+    ADMIN_CHAT_ID: Optional[int] = None
 
     # ── WhatsApp (Meta Business API) ─────────────────────────────────────────
     WHATSAPP_TOKEN: Optional[str] = None
