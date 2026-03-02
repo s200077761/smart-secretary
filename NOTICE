@@ -1,0 +1,31 @@
+Smart Secretary — Third-Party Notices
+======================================
+
+This product uses the following third-party software, some of which are
+licensed under the Apache License 2.0:
+
+1. FastAPI (https://fastapi.tiangolo.com)
+   License: MIT
+
+2. LangChain (https://langchain.com)
+   License: MIT
+
+3. Google Generative AI SDK (https://github.com/google/generative-ai-python)
+   License: Apache 2.0
+   Copyright 2023 Google LLC
+
+4. Firebase Admin Python SDK (https://firebase.google.com/docs/admin/setup)
+   License: Apache 2.0
+   Copyright Google Inc.
+
+5. Flutter (https://flutter.dev)
+   License: BSD 3-Clause
+
+6. Firebase Flutter plugins (https://github.com/firebase/flutterfire)
+   License: BSD 3-Clause
+   Copyright 2017 The Chromium Authors
+
+7. python-telegram-bot (https://python-telegram-bot.org)
+   License: LGPL-3.0
+
+For full license texts, see the respective project repositories.
