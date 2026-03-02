@@ -76,3 +76,20 @@ export interface AIResponse {
   content: string;
   error?: string;
 }
+
+// Manus Agent Types
+export interface ManusStep {
+  id: number;
+  title: string;
+  description: string;
+  status: "pending" | "running" | "completed" | "failed";
+  result?: string;
+}
+
+export interface ManusTaskState {
+  status: "idle" | "planning" | "executing" | "completed" | "failed";
+  steps: ManusStep[];
+  currentStepIndex: number;
+  finalResult?: string;
+  error?: string;
+}
