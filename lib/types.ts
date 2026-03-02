@@ -78,18 +78,30 @@ export interface AIResponse {
 }
 
 // Manus Agent Types
+export type ManusToolType = "research" | "write" | "analyze" | "code" | "plan" | "review" | "browse";
+
 export interface ManusStep {
   id: number;
   title: string;
   description: string;
-  status: "pending" | "running" | "completed" | "failed";
+  status: "pending" | "running" | "thinking" | "completed" | "failed";
   result?: string;
+  /** AI reasoning before executing the step */
+  thought?: string;
+  /** Simulated tool used for this step */
+  tool?: ManusToolType;
+  /** Granular sub-actions taken during execution */
+  actions?: string[];
 }
 
 export interface ManusTaskState {
-  status: "idle" | "planning" | "executing" | "completed" | "failed";
+  status: "idle" | "planning" | "executing" | "reflecting" | "completed" | "failed";
   steps: ManusStep[];
   currentStepIndex: number;
+  /** Live thinking text shown while AI is reasoning */
+  currentThought?: string;
   finalResult?: string;
+  /** Post-execution reflection note */
+  reflectionNote?: string;
   error?: string;
 }
