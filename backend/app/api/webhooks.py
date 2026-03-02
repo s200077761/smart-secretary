@@ -1,16 +1,14 @@
 """Webhook routes for Telegram and WhatsApp."""
 
 from fastapi import APIRouter, Request, Response, HTTPException
+from fastapi.responses import JSONResponse
 from app.bots import telegram as tg_bot, whatsapp as wa_bot
 
 router = APIRouter(prefix="/webhook", tags=["webhooks"])
 
 
-# ── WhatsApp ──────────────────────────────────────────────────────────────────
-
 @router.get("/whatsapp")
 async def verify_whatsapp(request: Request) -> Response:
-    """Meta sends a GET to verify the webhook endpoint."""
     from app.config import settings
     params = dict(request.query_params)
     if (
@@ -23,17 +21,19 @@ async def verify_whatsapp(request: Request) -> Response:
 
 @router.post("/whatsapp")
 async def whatsapp_incoming(request: Request) -> dict:
-    """Receive and handle incoming WhatsApp messages."""
     body = await request.json()
     await wa_bot.handle_incoming(body)
     return {"status": "ok"}
 
 
-# ── Telegram ──────────────────────────────────────────────────────────────────
-
 @router.post("/telegram")
-async def telegram_incoming(request: Request) -> dict:
-    """Receive Telegram webhook updates."""
+async def telegram_incoming(request: Request) -> Response:
+    """
+    Receive Telegram webhook update.
+    Returns a Bot API method inline (Telegram executes it server-side).
+    """
     body = await request.json()
-    await tg_bot.handle_update(body)
-    return {"status": "ok"}
+    result = await tg_bot.handle_update(body)
+    if result:
+        return JSONResponse(content=result)
+    return JSONResponse(content={"status": "ok"})
