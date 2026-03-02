@@ -1,5 +1,6 @@
 """Telegram Bot — webhook inline-response mode (simplified, no Markdown)."""
 
+import asyncio
 import base64
 import logging
 
@@ -37,6 +38,19 @@ def _reply(chat_id: int, text: str) -> dict:
     }
 
 
+async def _send_message(chat_id: int, text: str) -> None:
+    """Send a message directly via Telegram API (for background tasks)."""
+    token = settings.TELEGRAM_TOKEN
+    async with httpx.AsyncClient(timeout=30) as client:
+        try:
+            await client.post(
+                f"https://api.telegram.org/bot{token}/sendMessage",
+                json={"chat_id": chat_id, "text": text[:4096]},
+            )
+        except Exception as exc:
+            logger.exception("_send_message failed: %s", exc)
+
+
 async def _download_photo(file_id: str) -> bytes:
     """Download photo bytes from Telegram."""
     token = settings.TELEGRAM_TOKEN
@@ -66,6 +80,18 @@ async def _analyze_iris(image_bytes: bytes) -> str:
     return str(response.content)
 
 
+async def _process_iris_bg(chat_id: int, file_id: str, caption: str) -> None:
+    """Background task: download photo, analyze iris, send result."""
+    try:
+        image_bytes = await _download_photo(file_id)
+        analysis = await _analyze_iris(image_bytes)
+        prefix = f"ملاحظة: {caption}\n\n" if caption else ""
+        await _send_message(chat_id, f"تحليل قزحية العين:\n\n{prefix}{analysis}")
+    except Exception as exc:
+        logger.exception("Iris analysis error: %s", exc)
+        await _send_message(chat_id, f"تعذّر تحليل الصورة: {exc}")
+
+
 async def setup(webhook_url: str | None = None) -> None:
     if not settings.TELEGRAM_TOKEN:
         logger.info("No TELEGRAM_TOKEN — Telegram bot disabled.")
@@ -83,19 +109,14 @@ async def handle_update(body: dict) -> dict | None:
 
     chat_id: int = message["chat"]["id"]
 
-    # ── Photo: iris analysis ──────────────────────────────────────────────────
+    # ── Photo: iris analysis (background task) ────────────────────────────────
     if "photo" in message:
         photos = message["photo"]
         file_id = photos[-1]["file_id"]  # largest available size
         caption = message.get("caption", "").strip()
-        try:
-            image_bytes = await _download_photo(file_id)
-            analysis = await _analyze_iris(image_bytes)
-            prefix = f"ملاحظة: {caption}\n\n" if caption else ""
-            return _reply(chat_id, f"تحليل قزحية العين:\n\n{prefix}{analysis}")
-        except Exception as exc:
-            logger.exception("Iris analysis error: %s", exc)
-            return _reply(chat_id, f"تعذّر تحليل الصورة: {exc}")
+        # Start background processing, reply immediately to avoid webhook timeout
+        asyncio.create_task(_process_iris_bg(chat_id, file_id, caption))
+        return _reply(chat_id, "جارٍ تحليل صورة القزحية... سيصلك الرد خلال لحظات.")
 
     # ── Text commands ─────────────────────────────────────────────────────────
     text: str = message.get("text", "").strip()
