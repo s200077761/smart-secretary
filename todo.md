@@ -67,4 +67,5 @@
 - [ ] Create GitHub repository
 - [ ] Push code to GitHub
 - [x] Create Hugging Face repository
-- [x] Push code to Hugging Face (https://huggingface.co/spaces/s200077761/smart-secretary)
+- [x] Push frontend code to HF (https://huggingface.co/spaces/s200077761/smart-secretary)
+- [x] Deploy backend API to HF Docker Space (https://huggingface.co/spaces/s200077761/smart-secretary-api)
