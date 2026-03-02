@@ -39,6 +39,20 @@ const MAPPING = {
   "arrow.clockwise": "refresh",
   "mic": "mic",
   "stop.fill": "stop",
+  // Manus agent icons
+  "checkmark": "check",
+  "checkmark.circle.fill": "check-circle",
+  "arrow.right": "arrow-forward",
+  "play.fill": "play-arrow",
+  "chevron.up": "keyboard-arrow-up",
+  "chevron.down": "keyboard-arrow-down",
+  "list.bullet": "format-list-bulleted",
+  "list.bullet.clipboard": "assignment",
+  "bubble.left.and.bubble.right": "chat",
+  "arrow.triangle.2.circlepath": "sync",
+  "checkmark.seal.fill": "verified",
+  "exclamationmark.triangle": "warning",
+  "checkmark.shield": "verified-user",
 } satisfies Record<string, MaterialIconName>;
 
 type IconSymbolName = keyof typeof MAPPING;

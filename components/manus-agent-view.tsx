@@ -87,7 +87,7 @@ function StepIcon({ step, colors }: { step: ManusStep; colors: ReturnType<typeof
     return <IconSymbol name="checkmark.circle.fill" size={22} color="#10B981" />;
   }
   if (step.status === "failed") {
-    return <IconSymbol name="xmark.circle.fill" size={22} color="#EF4444" />;
+    return <IconSymbol name="xmark" size={22} color="#EF4444" />;
   }
   // pending
   return (
@@ -235,6 +235,15 @@ interface ManusAgentViewProps {
 export function ManusAgentView({ onClose }: ManusAgentViewProps) {
   const colors = useColors();
   const scrollRef = useRef<ScrollView>(null);
+  const isMounted = useRef(true);
+  const scrollTimeouts = useRef<ReturnType<typeof setTimeout>[]>([]);
+
+  useEffect(() => {
+    return () => {
+      isMounted.current = false;
+      scrollTimeouts.current.forEach(clearTimeout);
+    };
+  }, []);
 
   const [taskInput, setTaskInput] = useState("");
   const [taskState, setTaskState] = useState<ManusTaskState>({
@@ -261,10 +270,10 @@ export function ManusAgentView({ onClose }: ManusAgentViewProps) {
   const statusIcon: Record<ManusTaskState["status"], string> = {
     idle: "",
     planning: "list.bullet.clipboard",
-    executing: "cpu",
+    executing: "sparkles",
     reflecting: "arrow.triangle.2.circlepath",
     completed: "checkmark.seal.fill",
-    failed: "xmark.circle.fill",
+    failed: "xmark",
   };
 
   const handleStart = async () => {
@@ -275,8 +284,10 @@ export function ManusAgentView({ onClose }: ManusAgentViewProps) {
     }
 
     await runManusAgent(taskInput.trim(), (newState) => {
+      if (!isMounted.current) return;
       setTaskState(newState);
-      setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+      const t = setTimeout(() => scrollRef.current?.scrollToEnd({ animated: true }), 100);
+      scrollTimeouts.current.push(t);
     });
   };
 
@@ -296,13 +307,13 @@ export function ManusAgentView({ onClose }: ManusAgentViewProps) {
           <IconSymbol name="xmark" size={22} color={colors.muted} />
         </Pressable>
         <View style={styles.headerCenter}>
-          <IconSymbol name="cpu" size={20} color="#0EA5E9" />
+          <IconSymbol name="sparkles" size={20} color="#0EA5E9" />
           <Text style={[styles.headerTitle, { color: colors.foreground }]}>وكيل مانوس</Text>
           {isRunning && <PulsingDots color="#0EA5E9" />}
         </View>
         {isDone ? (
           <Pressable onPress={handleReset} style={styles.headerBtn}>
-            <IconSymbol name="arrow.counterclockwise" size={20} color={colors.muted} />
+            <IconSymbol name="arrow.clockwise" size={20} color={colors.muted} />
           </Pressable>
         ) : (
           <View style={styles.headerBtn} />
@@ -329,7 +340,7 @@ export function ManusAgentView({ onClose }: ManusAgentViewProps) {
                 {[
                   { icon: "list.bullet.clipboard", label: "تخطيط ذكي للمهام" },
                   { icon: "bubble.left.and.bubble.right", label: "تفكير قبل كل خطوة" },
-                  { icon: "cpu", label: "تنفيذ متعدد الأدوات" },
+                  { icon: "sparkles", label: "تنفيذ متعدد الأدوات" },
                   { icon: "arrow.triangle.2.circlepath", label: "مراجعة وتقييم النتائج" },
                 ].map(({ icon, label }) => (
                   <View key={label} style={styles.capabilityItem}>
