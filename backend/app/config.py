@@ -8,9 +8,9 @@ from typing import Optional
 
 
 class Settings(BaseSettings):
-    # ── AI ──────────────────────────────────────────────────────────────────
-    GEMINI_API_KEY: str = ""
-    GEMINI_MODEL: str = "gemini-2.0-flash"
+    # ── AI — ZhipuAI (z.ai) ──────────────────────────────────────────────────
+    ZHIPU_API_KEY: str = ""
+    ZHIPU_MODEL: str = "glm-4-flash"
 
     # ── Firebase ─────────────────────────────────────────────────────────────
     FIREBASE_CREDENTIALS_PATH: Optional[str] = None

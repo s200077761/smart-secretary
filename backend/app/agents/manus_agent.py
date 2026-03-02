@@ -8,10 +8,9 @@ import json
 import re
 from typing import Callable, Awaitable
 
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage, SystemMessage
 
-from app.config import settings
+from app.llm import get_llm
 from app.models.schemas import ManusStep, ManusTaskState, ManusToolType
 
 StateUpdater = Callable[[ManusTaskState], Awaitable[None] | None]
@@ -35,19 +34,8 @@ def _detect_tool(title: str, description: str) -> ManusToolType:
     return "plan"
 
 
-# ── LLM factory ──────────────────────────────────────────────────────────────
-
-def _make_llm(temperature: float = 0.4) -> ChatGoogleGenerativeAI:
-    return ChatGoogleGenerativeAI(
-        model=settings.GEMINI_MODEL,
-        google_api_key=settings.GEMINI_API_KEY,
-        temperature=temperature,
-        max_output_tokens=4096,
-    )
-
-
 async def _call(system: str, human: str, temperature: float = 0.4) -> str:
-    llm = _make_llm(temperature)
+    llm = get_llm(temperature)
     messages = [SystemMessage(content=system), HumanMessage(content=human)]
     response = await llm.ainvoke(messages)
     return str(response.content)

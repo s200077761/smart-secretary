@@ -7,10 +7,9 @@ Also supports Twilio sandbox as a fallback.
 import logging
 import httpx
 
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage, SystemMessage
 
-from app.config import settings
+from app.llm import get_llm
 from app.agents.manus_agent import run_manus_agent, ManusTaskState
 
 logger = logging.getLogger(__name__)
@@ -25,11 +24,7 @@ AGENT_TRIGGER = "/agent "  # Users can type /agent <task> in WhatsApp
 
 
 async def _ai_reply(text: str) -> str:
-    llm = ChatGoogleGenerativeAI(
-        model=settings.GEMINI_MODEL,
-        google_api_key=settings.GEMINI_API_KEY,
-        temperature=0.7,
-    )
+    llm = get_llm(temperature=0.7)
     messages = [SystemMessage(content=_SYSTEM_PROMPT), HumanMessage(content=text)]
     response = await llm.ainvoke(messages)
     return str(response.content)

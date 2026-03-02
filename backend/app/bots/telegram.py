@@ -19,10 +19,9 @@ from telegram.ext import (
     ContextTypes,
     filters,
 )
-from langchain_google_genai import ChatGoogleGenerativeAI
 from langchain.schema import HumanMessage, SystemMessage
 
-from app.config import settings
+from app.llm import get_llm
 from app.agents.manus_agent import run_manus_agent, ManusTaskState
 
 logger = logging.getLogger(__name__)
@@ -111,17 +110,13 @@ async def _agent_command(update: Update, context: ContextTypes.DEFAULT_TYPE) -> 
 
 
 async def _handle_message(update: Update, context: ContextTypes.DEFAULT_TYPE) -> None:
-    """Plain text → direct Gemini chat reply."""
+    """Plain text → AI chat reply."""
     user_text = update.message.text or ""
     if not user_text:
         return
 
     try:
-        llm = ChatGoogleGenerativeAI(
-            model=settings.GEMINI_MODEL,
-            google_api_key=settings.GEMINI_API_KEY,
-            temperature=0.7,
-        )
+        llm = get_llm(temperature=0.7)
         messages = [
             SystemMessage(content="أنت السكرتير الذكي، مساعد شخصي يتحدث العربية. كن مفيداً وموجزاً."),
             HumanMessage(content=user_text),

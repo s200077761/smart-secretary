@@ -4,8 +4,7 @@ uvicorn[standard]==0.32.1
 
 # ── AI / LangChain ────────────────────────────────────────────────────────────
 langchain==0.3.7
-langchain-google-genai==2.0.7
-google-generativeai==0.8.3
+langchain-openai==0.2.14
 
 # ── Firebase ──────────────────────────────────────────────────────────────────
 firebase-admin==6.6.0
