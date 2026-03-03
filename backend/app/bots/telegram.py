@@ -274,7 +274,7 @@ async def setup(webhook_url: str | None = None) -> None:
     logger.info("Telegram bot ready.")
 
 
-async def handle_update(body: dict) -> dict | None:
+async def handle_update(body: dict, background_tasks=None) -> dict | None:
     if not settings.TELEGRAM_TOKEN:
         return None
 
@@ -338,7 +338,10 @@ async def handle_update(body: dict) -> dict | None:
             if atype != "auto"
             else "جارٍ تحليل الصورة... سيصلك الرد خلال لحظات."
         )
-        asyncio.create_task(_process_photo_bg(chat_id, file_id, caption, user_label))
+        if background_tasks is not None:
+            background_tasks.add_task(_process_photo_bg, chat_id, file_id, caption, user_label)
+        else:
+            asyncio.create_task(_process_photo_bg(chat_id, file_id, caption, user_label))
         return _reply(chat_id, wait_msg)
 
     # ── Text commands ─────────────────────────────────────────────────────────

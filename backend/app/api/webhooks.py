@@ -1,6 +1,6 @@
 """Webhook routes for Telegram and WhatsApp."""
 
-from fastapi import APIRouter, Request, Response, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
 from app.bots import telegram as tg_bot, whatsapp as wa_bot
 
@@ -27,13 +27,13 @@ async def whatsapp_incoming(request: Request) -> dict:
 
 
 @router.post("/telegram")
-async def telegram_incoming(request: Request) -> Response:
+async def telegram_incoming(request: Request, background_tasks: BackgroundTasks) -> Response:
     """
     Receive Telegram webhook update.
     Returns a Bot API method inline (Telegram executes it server-side).
     """
     body = await request.json()
-    result = await tg_bot.handle_update(body)
+    result = await tg_bot.handle_update(body, background_tasks)
     if result:
         return JSONResponse(content=result)
     return JSONResponse(content={"status": "ok"})
