@@ -15,6 +15,7 @@ import { ScreenContainer } from "@/components/screen-container";
 import { IconSymbol } from "@/components/ui/icon-symbol";
 import { useColors } from "@/hooks/use-colors";
 import { useChat } from "@/lib/chat-context";
+import { AIProvider } from "@/lib/types";
 import * as Haptics from "expo-haptics";
 
 const SETTINGS_KEY = "smart_secretary_settings";
@@ -22,17 +23,33 @@ const SETTINGS_KEY = "smart_secretary_settings";
 interface Settings {
   enableHaptics: boolean;
   responseStyle: "concise" | "detailed";
+  aiProvider: AIProvider;
 }
 
 const defaultSettings: Settings = {
   enableHaptics: true,
   responseStyle: "detailed",
+  aiProvider: "huggingface",
 };
+
+const AI_PROVIDERS: { id: AIProvider; label: string; labelAr: string; model: string }[] = [
+  { id: "huggingface", label: "HuggingFace", labelAr: "HuggingFace", model: "Qwen2.5-7B" },
+  { id: "openai", label: "OpenAI", labelAr: "OpenAI GPT", model: "GPT-4o mini" },
+  { id: "anthropic", label: "Anthropic", labelAr: "Claude", model: "claude-haiku" },
+  { id: "gemini", label: "Google Gemini", labelAr: "Gemini", model: "Gemini 2.0 Flash" },
+];
+
+const BOT_PLATFORMS = [
+  { id: "telegram", label: "Telegram", labelAr: "تيليجرام", envVar: "TELEGRAM_TOKEN" },
+  { id: "whatsapp", label: "WhatsApp", labelAr: "واتساب", envVar: "WHATSAPP_TOKEN" },
+  { id: "discord", label: "Discord", labelAr: "ديسكورد", envVar: "DISCORD_BOT_TOKEN" },
+];
 
 export default function SettingsScreen() {
   const colors = useColors();
   const { clearMessages } = useChat();
   const [settings, setSettings] = useState<Settings>(defaultSettings);
+  const [showProviderPicker, setShowProviderPicker] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -42,7 +59,7 @@ export default function SettingsScreen() {
     try {
       const stored = await AsyncStorage.getItem(SETTINGS_KEY);
       if (stored) {
-        setSettings(JSON.parse(stored));
+        setSettings({ ...defaultSettings, ...JSON.parse(stored) });
       }
     } catch (error) {
       console.error("Failed to load settings:", error);
@@ -73,6 +90,14 @@ export default function SettingsScreen() {
     saveSettings({ ...settings, responseStyle: newStyle });
   };
 
+  const handleProviderChange = (provider: AIProvider) => {
+    if (Platform.OS !== "web" && settings.enableHaptics) {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
+    saveSettings({ ...settings, aiProvider: provider });
+    setShowProviderPicker(false);
+  };
+
   const handleClearHistory = () => {
     Alert.alert(
       "مسح سجل المحادثات",
@@ -94,6 +119,8 @@ export default function SettingsScreen() {
     );
   };
 
+  const currentProvider = AI_PROVIDERS.find((p) => p.id === settings.aiProvider) ?? AI_PROVIDERS[0];
+
   const renderSettingItem = ({
     icon,
     title,
@@ -102,7 +129,7 @@ export default function SettingsScreen() {
     onPress,
     destructive,
   }: {
-    icon: "moon" | "sparkles" | "trash" | "info.circle" | "globe";
+    icon: "moon" | "sparkles" | "trash" | "info.circle" | "globe" | "bolt" | "bubble.left";
     title: string;
     subtitle?: string;
     rightElement?: React.ReactNode;
@@ -157,6 +184,75 @@ export default function SettingsScreen() {
               </View>
             ),
           })}
+
+          {/* AI Provider Selector */}
+          {renderSettingItem({
+            icon: "bolt",
+            title: "مزود الذكاء الاصطناعي",
+            subtitle: `${currentProvider.labelAr} · ${currentProvider.model}`,
+            onPress: () => setShowProviderPicker(!showProviderPicker),
+            rightElement: (
+              <View style={[styles.badge, { backgroundColor: "#7C3AED20" }]}>
+                <Text style={[styles.badgeText, { color: "#7C3AED" }]}>
+                  {currentProvider.label}
+                </Text>
+              </View>
+            ),
+          })}
+
+          {/* Provider Picker Dropdown */}
+          {showProviderPicker && (
+            <View style={[styles.providerPicker, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+              {AI_PROVIDERS.map((provider) => (
+                <Pressable
+                  key={provider.id}
+                  onPress={() => handleProviderChange(provider.id)}
+                  style={({ pressed }) => [
+                    styles.providerOption,
+                    { borderBottomColor: colors.border },
+                    pressed && { opacity: 0.7 },
+                    settings.aiProvider === provider.id && { backgroundColor: "#7C3AED15" },
+                  ]}
+                >
+                  <View style={styles.providerOptionContent}>
+                    <Text style={[styles.providerOptionTitle, { color: colors.foreground }]}>
+                      {provider.labelAr}
+                    </Text>
+                    <Text style={[styles.providerOptionModel, { color: colors.muted }]}>
+                      {provider.model}
+                    </Text>
+                  </View>
+                  {settings.aiProvider === provider.id && (
+                    <IconSymbol name="checkmark" size={16} color="#7C3AED" />
+                  )}
+                </Pressable>
+              ))}
+            </View>
+          )}
+        </View>
+
+        {/* OpenClaw Messaging Platforms */}
+        <Text style={[styles.sectionTitle, { color: colors.muted }]}>منصات المراسلة (OpenClaw)</Text>
+        <View style={[styles.platformCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.platformCardTitle, { color: colors.foreground }]}>
+            تكاملات البوت
+          </Text>
+          <Text style={[styles.platformCardSubtitle, { color: colors.muted }]}>
+            فعّل البوتات عبر متغيرات البيئة في الخادم
+          </Text>
+          <View style={styles.platformList}>
+            {BOT_PLATFORMS.map((platform) => (
+              <View key={platform.id} style={styles.platformRow}>
+                <View style={[styles.platformDot, { backgroundColor: colors.muted + "40" }]} />
+                <Text style={[styles.platformName, { color: colors.foreground }]}>
+                  {platform.labelAr}
+                </Text>
+                <Text style={[styles.platformEnv, { color: colors.muted }]}>
+                  {platform.envVar}
+                </Text>
+              </View>
+            ))}
+          </View>
         </View>
 
         {/* App Settings Section */}
@@ -195,7 +291,7 @@ export default function SettingsScreen() {
           {renderSettingItem({
             icon: "info.circle",
             title: "السكرتير الذكي",
-            subtitle: "الإصدار 1.0.0",
+            subtitle: "الإصدار 2.1.0",
           })}
         </View>
 
@@ -208,7 +304,7 @@ export default function SettingsScreen() {
             مساعدك الذكي الشخصي للمهام اليومية. يوفر التطبيق خدمات الدردشة الذكية، الوكلاء المتخصصين، البحث المعزز بالذكاء الاصطناعي، ومساعد الكود البرمجي.
           </Text>
           <Text style={[styles.descriptionText, { color: colors.muted, marginTop: 8 }]}>
-            مدعوم بتقنية Google Gemini AI
+            مدعوم بتكاملات OpenClaw: Telegram · WhatsApp · Discord
           </Text>
         </View>
       </ScrollView>
@@ -281,6 +377,75 @@ const styles = StyleSheet.create({
   badgeText: {
     fontSize: 12,
     fontWeight: "600",
+  },
+  providerPicker: {
+    borderRadius: 12,
+    borderWidth: 1,
+    overflow: "hidden",
+    marginTop: 4,
+  },
+  providerOption: {
+    flexDirection: "row",
+    alignItems: "center",
+    padding: 12,
+    borderBottomWidth: 0.5,
+    gap: 12,
+  },
+  providerOptionContent: {
+    flex: 1,
+    alignItems: "flex-end",
+  },
+  providerOptionTitle: {
+    fontSize: 15,
+    fontWeight: "500",
+    textAlign: "right",
+  },
+  providerOptionModel: {
+    fontSize: 12,
+    marginTop: 2,
+    textAlign: "right",
+  },
+  platformCard: {
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 8,
+  },
+  platformCardTitle: {
+    fontSize: 15,
+    fontWeight: "600",
+    textAlign: "right",
+  },
+  platformCardSubtitle: {
+    fontSize: 13,
+    textAlign: "right",
+  },
+  platformList: {
+    gap: 8,
+    marginTop: 4,
+  },
+  platformRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    gap: 8,
+    justifyContent: "flex-end",
+  },
+  platformDot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+  },
+  platformName: {
+    fontSize: 14,
+    fontWeight: "500",
+  },
+  platformEnv: {
+    fontSize: 11,
+    fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace",
+    backgroundColor: "rgba(0,0,0,0.06)",
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    borderRadius: 4,
   },
   descriptionCard: {
     marginTop: 24,

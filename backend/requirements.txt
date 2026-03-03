@@ -6,6 +6,10 @@ uvicorn[standard]==0.32.1
 langchain==0.3.7
 langchain-openai==0.2.14
 
+# ── Additional AI providers (OpenClaw-style multi-provider support) ────────────
+langchain-anthropic==0.3.0
+langchain-google-genai==2.0.0
+
 # ── Firebase ──────────────────────────────────────────────────────────────────
 firebase-admin==6.6.0
 
@@ -18,6 +22,9 @@ aiohttp==3.11.9
 
 # ── Twilio (optional WhatsApp alternative) ────────────────────────────────────
 twilio==9.3.7
+
+# ── Discord (Ed25519 signature verification for interactions webhook) ──────────
+PyNaCl==1.5.0
 
 # ── Config / utils ────────────────────────────────────────────────────────────
 pydantic==2.10.3

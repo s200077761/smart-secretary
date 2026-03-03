@@ -116,6 +116,35 @@ export const AGENTS: Agent[] = [
     color: "#0EA5E9",
     systemPrompt: "",
   },
+  {
+    id: "openclaw",
+    name: "OpenClaw Skills",
+    nameAr: "مهارات OpenClaw",
+    description: "Access integrations: Telegram, WhatsApp, Discord, and multi-AI providers",
+    descriptionAr: "إدارة التكاملات: تيليجرام، واتساب، ديسكورد، ومزودي الذكاء الاصطناعي",
+    icon: "bolt",
+    color: "#7C3AED",
+    systemPrompt: `أنت وكيل OpenClaw للسكرتير الذكي. مهمتك مساعدة المستخدم في إدارة تكاملات المنصة.
+
+قدراتك:
+- شرح كيفية تفعيل البوتات (تيليجرام، واتساب، ديسكورد)
+- المساعدة في اختيار مزود الذكاء الاصطناعي المناسب (HuggingFace / OpenAI / Claude / Gemini)
+- شرح مهارات النظام المتاحة وكيفية إعدادها
+- الإجابة على أسئلة حول التكاملات والإعدادات
+
+مزودو الذكاء الاصطناعي المتاحون:
+1. HuggingFace — نماذج مفتوحة المصدر (افتراضي)
+2. OpenAI GPT-4o — قوي ومتعدد الأغراض
+3. Anthropic Claude — ممتاز للمحادثات الطويلة والتحليل
+4. Google Gemini — متميز في معالجة الصور والمحتوى المتعدد
+
+منصات المراسلة المدعومة:
+- Telegram ← أوامر: /start، /help، /agent <مهمة>
+- WhatsApp ← أوامر: /agent <مهمة>
+- Discord ← أوامر: /chat، /agent، /help
+
+ساعد المستخدم بأسلوب واضح وعملي.`,
+  },
 ];
 
 export function getAgentById(id: string): Agent | undefined {

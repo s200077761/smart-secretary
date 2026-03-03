@@ -63,12 +63,16 @@ export interface CodeState {
   isLoading: boolean;
 }
 
+// AI Provider type (OpenClaw-style multi-provider support)
+export type AIProvider = "huggingface" | "openai" | "anthropic" | "gemini";
+
 // Settings Types
 export interface AppSettings {
   theme: "light" | "dark" | "system";
   language: "ar" | "en";
   responseStyle: "concise" | "detailed";
   enableHaptics: boolean;
+  aiProvider: AIProvider;
 }
 
 // API Response Types

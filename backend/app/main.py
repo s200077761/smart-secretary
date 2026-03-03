@@ -5,6 +5,7 @@ Startup sequence:
   1. Initialize Firebase Admin SDK
   2. Mount all API routers
   3. Start Telegram bot (polling or webhook)
+  4. Register Discord slash commands
 """
 
 import logging
@@ -19,6 +20,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.config import settings
 from app.api.router import router as api_router
 from app.bots import telegram as tg_bot
+from app.bots import discord as dc_bot
 
 logging.basicConfig(
     level=logging.INFO,
@@ -42,6 +44,9 @@ async def lifespan(app: FastAPI) -> AsyncGenerator[None, None]:
     webhook_url = settings.SERVER_URL if settings.SERVER_URL else None
     await tg_bot.setup(webhook_url)
 
+    # Discord — register slash commands on startup
+    await dc_bot.register_commands()
+
     yield  # ── App running ──────────────────────────────────────────────────
 
     # ── Shutdown ─────────────────────────────────────────────────────────────
@@ -52,9 +57,9 @@ app = FastAPI(
     title="السكرتير الذكي API",
     description=(
         "AI-powered personal assistant API. "
-        "Supports Arabic/English chat, autonomous agents, Telegram & WhatsApp."
+        "Supports Arabic/English chat, autonomous agents, Telegram, WhatsApp & Discord."
     ),
-    version="2.0.0",
+    version="2.1.0",
     lifespan=lifespan,
 )
 
@@ -72,7 +77,12 @@ app.include_router(api_router, prefix="/api")
 
 @app.get("/", tags=["health"])
 async def root() -> dict:
-    return {"app": "السكرتير الذكي", "version": "2.0.0", "status": "running"}
+    return {
+        "app": "السكرتير الذكي",
+        "version": "2.1.0",
+        "status": "running",
+        "ai_provider": settings.DEFAULT_AI_PROVIDER,
+    }
 
 
 @app.get("/health", tags=["health"])

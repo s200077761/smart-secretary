@@ -1,11 +1,14 @@
-"""Webhook routes for Telegram and WhatsApp."""
+"""Webhook routes for Telegram, WhatsApp, and Discord."""
 
 from fastapi import APIRouter, BackgroundTasks, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
 from app.bots import telegram as tg_bot, whatsapp as wa_bot
+from app.bots import discord as dc_bot
 
 router = APIRouter(prefix="/webhook", tags=["webhooks"])
 
+
+# ── WhatsApp ──────────────────────────────────────────────────────────────────
 
 @router.get("/whatsapp")
 async def verify_whatsapp(request: Request) -> Response:
@@ -26,6 +29,8 @@ async def whatsapp_incoming(request: Request) -> dict:
     return {"status": "ok"}
 
 
+# ── Telegram ──────────────────────────────────────────────────────────────────
+
 @router.post("/telegram")
 async def telegram_incoming(request: Request, background_tasks: BackgroundTasks) -> Response:
     """
@@ -37,3 +42,27 @@ async def telegram_incoming(request: Request, background_tasks: BackgroundTasks)
     if result:
         return JSONResponse(content=result)
     return JSONResponse(content={"status": "ok"})
+
+
+# ── Discord ───────────────────────────────────────────────────────────────────
+
+@router.post("/discord")
+async def discord_incoming(request: Request) -> Response:
+    """
+    Receive Discord Interactions webhook.
+
+    Discord requires:
+    1. Ed25519 signature verification (X-Signature-Ed25519 + X-Signature-Timestamp)
+    2. Respond to PING with PONG within 3 seconds
+    3. Respond to APPLICATION_COMMAND with a valid response
+    """
+    signature = request.headers.get("X-Signature-Ed25519", "")
+    timestamp = request.headers.get("X-Signature-Timestamp", "")
+    body_bytes = await request.body()
+
+    if not dc_bot.verify_signature(body_bytes, signature, timestamp):
+        raise HTTPException(status_code=401, detail="Invalid Discord signature")
+
+    body = await request.json()
+    result = await dc_bot.handle_interaction(body)
+    return JSONResponse(content=result)
