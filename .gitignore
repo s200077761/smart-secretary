@@ -66,3 +66,6 @@ __pycache__/
 *.pyc
 *.pyo
 .pytest_cache/
+
+# OpenClaw — local gateway state and session data (contains auth tokens)
+.openclaw/
