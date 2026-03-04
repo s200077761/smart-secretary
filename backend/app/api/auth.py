@@ -1,26 +1,26 @@
 """Phone authentication via Twilio Verify (OTP)."""
 
-import httpx
+import asyncio
 from fastapi import APIRouter, HTTPException
 from pydantic import BaseModel
+from twilio.rest import Client
+from twilio.base.exceptions import TwilioRestException
 
 from app.config import settings
 
 router = APIRouter(prefix="/auth", tags=["auth"])
 
-_VERIFY_BASE = "https://verify.twilio.com/v2/Services"
 
-
-def _twilio_auth() -> tuple[str, str]:
+def _client() -> tuple[Client, str]:
     if not settings.TWILIO_ACCOUNT_SID or not settings.TWILIO_AUTH_TOKEN:
         raise HTTPException(status_code=503, detail="Twilio credentials not configured")
     if not settings.TWILIO_VERIFY_SERVICE_SID:
         raise HTTPException(status_code=503, detail="Twilio Verify Service SID not configured")
-    return settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN
+    return Client(settings.TWILIO_ACCOUNT_SID, settings.TWILIO_AUTH_TOKEN), settings.TWILIO_VERIFY_SERVICE_SID
 
 
 class SendOTPRequest(BaseModel):
-    phone: str        # E.164 format, e.g. +966510275782
+    phone: str          # E.164 format, e.g. +966510275782
     channel: str = "sms"   # sms | whatsapp | call
 
 
@@ -32,40 +32,39 @@ class VerifyOTPRequest(BaseModel):
 @router.post("/send-otp")
 async def send_otp(req: SendOTPRequest) -> dict:
     """Send a verification code to the given phone number."""
-    sid, token = _twilio_auth()
-    url = f"{_VERIFY_BASE}/{settings.TWILIO_VERIFY_SERVICE_SID}/Verifications"
+    client, service_sid = _client()
 
-    async with httpx.AsyncClient(timeout=15) as client:
-        resp = await client.post(
-            url,
-            auth=(sid, token),
-            data={"To": req.phone, "Channel": req.channel},
+    def _send():
+        return client.verify.v2.services(service_sid).verifications.create(
+            to=req.phone,
+            channel=req.channel,
         )
 
-    if resp.status_code not in (200, 201):
-        raise HTTPException(status_code=resp.status_code, detail=resp.text)
+    try:
+        verification = await asyncio.to_thread(_send)
+    except TwilioRestException as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    data = resp.json()
-    return {"status": data.get("status"), "phone": req.phone, "channel": req.channel}
+    return {"status": verification.status, "sid": verification.sid, "phone": req.phone}
 
 
 @router.post("/verify-otp")
 async def verify_otp(req: VerifyOTPRequest) -> dict:
     """Check the OTP code entered by the user."""
-    sid, token = _twilio_auth()
-    url = f"{_VERIFY_BASE}/{settings.TWILIO_VERIFY_SERVICE_SID}/VerificationCheck"
+    client, service_sid = _client()
 
-    async with httpx.AsyncClient(timeout=15) as client:
-        resp = await client.post(
-            url,
-            auth=(sid, token),
-            data={"To": req.phone, "Code": req.code},
+    def _check():
+        return client.verify.v2.services(service_sid).verification_checks.create(
+            to=req.phone,
+            code=req.code,
         )
 
-    data = resp.json()
-    verified = data.get("status") == "approved"
+    try:
+        check = await asyncio.to_thread(_check)
+    except TwilioRestException as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
-    if not verified:
+    if check.status != "approved":
         raise HTTPException(status_code=401, detail="Invalid or expired code")
 
     return {"verified": True, "phone": req.phone}
