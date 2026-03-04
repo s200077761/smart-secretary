@@ -44,6 +44,8 @@ class Settings(BaseSettings):
     WHATSAPP_TOKEN: Optional[str] = None
     WHATSAPP_PHONE_NUMBER_ID: Optional[str] = None
     WHATSAPP_VERIFY_TOKEN: str = "smart_secretary_verify_2026"
+    # Optional: your WhatsApp number (E.164) to receive all user conversations
+    ADMIN_WHATSAPP_NUMBER: Optional[str] = None
 
     # ── Twilio (alternative WhatsApp + Verify OTP) ───────────────────────────
     TWILIO_ACCOUNT_SID: Optional[str] = None
