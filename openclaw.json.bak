@@ -1,0 +1,84 @@
+// openclaw.json — Smart Secretary gateway configuration
+// Docs: https://openclaw.ai/gateway/configuration
+//
+// Tokens are read from environment variables automatically:
+//   TELEGRAM_BOT_TOKEN=...
+//   DISCORD_BOT_TOKEN=...
+//   ANTHROPIC_API_KEY=... (or OPENAI_API_KEY / GEMINI_API_KEY)
+//
+// Start the gateway:   pnpm openclaw:gateway
+// Open dashboard:      pnpm openclaw:dashboard
+// Pair channels:       pnpm openclaw:login
+
+{
+  // ── AI Agents ────────────────────────────────────────────────────────────────
+  agents: {
+    defaults: {
+      workspace: "./.openclaw/workspace",
+      model: {
+        primary: "anthropic/claude-haiku-4-5-20251001",
+        fallbacks: [
+          "openai/gpt-4o-mini",
+          "gemini/gemini-2.0-flash",
+        ],
+      },
+    },
+    list: [
+      {
+        id: "main",
+        identity: {
+          name: "السكرتير الذكي",
+          theme: "a bilingual (Arabic/English) personal AI secretary — professional, concise, and helpful",
+          emoji: "🤖",
+        },
+      },
+    ],
+  },
+
+  // ── Messaging Channels ───────────────────────────────────────────────────────
+  // Tokens are read from env vars: TELEGRAM_BOT_TOKEN, DISCORD_BOT_TOKEN
+  channels: {
+    // Telegram — requires TELEGRAM_BOT_TOKEN in environment
+    telegram: {
+      enabled: true,
+      groupPolicy: "open",
+      groups: {
+        "*": { requireMention: true },
+      },
+    },
+
+    // Discord — requires DISCORD_BOT_TOKEN in environment
+    discord: {
+      enabled: true,
+      dm: { enabled: true },
+      guilds: {
+        "*": { requireMention: false },
+      },
+    },
+
+    // WhatsApp — requires pairing (run: pnpm openclaw:login)
+    whatsapp: {
+      enabled: false,
+    },
+  },
+
+  // ── Message Queue ────────────────────────────────────────────────────────────
+  messages: {
+    queue: {
+      mode: "collect",
+      debounceMs: 500,
+    },
+  },
+
+  // ── Logging ──────────────────────────────────────────────────────────────────
+  logging: {
+    level: "info",
+    file: "./.openclaw/openclaw.log",
+    consoleStyle: "pretty",
+  },
+
+  // ── Gateway ──────────────────────────────────────────────────────────────────
+  gateway: {
+    mode: "local",
+  },
+}
