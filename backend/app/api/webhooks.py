@@ -1,6 +1,6 @@
 """Webhook routes for Telegram, WhatsApp, and Discord."""
 
-from fastapi import APIRouter, BackgroundTasks, Request, Response, HTTPException
+from fastapi import APIRouter, BackgroundTasks, Form, Request, Response, HTTPException
 from fastapi.responses import JSONResponse
 from app.bots import telegram as tg_bot, whatsapp as wa_bot
 from app.bots import discord as dc_bot
@@ -27,6 +27,17 @@ async def whatsapp_incoming(request: Request) -> dict:
     body = await request.json()
     await wa_bot.handle_incoming(body)
     return {"status": "ok"}
+
+
+# ── Twilio WhatsApp ───────────────────────────────────────────────────────────
+
+@router.post("/twilio")
+async def twilio_incoming(request: Request) -> Response:
+    """Receive Twilio WhatsApp sandbox webhook (application/x-www-form-urlencoded)."""
+    form = await request.form()
+    await wa_bot.handle_twilio_incoming(dict(form))
+    # Twilio expects an empty TwiML response
+    return Response(content="<Response/>", media_type="application/xml")
 
 
 # ── Telegram ──────────────────────────────────────────────────────────────────

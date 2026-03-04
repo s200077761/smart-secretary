@@ -86,6 +86,30 @@ async def _send(to: str, message: str) -> None:
         await _send_twilio(to, message)
 
 
+async def handle_twilio_incoming(form: dict) -> None:
+    """Parse and respond to a Twilio WhatsApp webhook (form-encoded)."""
+    try:
+        from_number: str = form.get("From", "").replace("whatsapp:", "")
+        text: str = (form.get("Body") or "").strip()
+
+        if not text or not from_number:
+            return
+
+        if text.lower().startswith(AGENT_TRIGGER):
+            task = text[len(AGENT_TRIGGER):]
+            await _send_twilio(from_number, "⏳ جاري تشغيل الوكيل المستقل، يرجى الانتظار...")
+            state = await run_manus_agent(task, lambda s: None)
+            reply = state.final_result or state.error or "❌ لم تكتمل المهمة"
+            if state.reflection_note:
+                reply += f"\n\n📊 {state.reflection_note}"
+        else:
+            reply = await _ai_reply(text)
+
+        await _send_twilio(from_number, reply)
+    except Exception as exc:
+        logger.exception("Twilio handler error: %s", exc)
+
+
 async def handle_incoming(body: dict) -> None:
     """Parse and respond to a WhatsApp webhook event."""
     try:
