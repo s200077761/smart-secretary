@@ -1,98 +1,88 @@
-// openclaw.json — Smart Secretary gateway configuration
-// Docs: https://openclaw.ai/gateway/configuration
-//
-// Sensitive values are read from environment variables.
-// Copy .env.example to .env and fill in your tokens.
-//
-// Start the gateway:
-//   pnpm openclaw:gateway
-//
-// Open the control dashboard:
-//   pnpm openclaw:dashboard
-
 {
-  // ── Identity ────────────────────────────────────────────────────────────────
-  identity: {
-    name: "السكرتير الذكي",
-    theme: "a bilingual (Arabic/English) personal AI secretary — professional, concise, and helpful",
-    emoji: "🤖",
+  "logging": {
+    "level": "info",
+    "file": "./.openclaw/openclaw.log",
+    "consoleStyle": "pretty"
   },
-
-  // ── AI Agent ────────────────────────────────────────────────────────────────
-  agent: {
-    // Workspace: where the agent stores session data and memory
-    workspace: "./.openclaw/workspace",
-
-    model: {
-      // Primary model — falls back to the next available provider
-      // Priority: Anthropic → OpenAI → Gemini
-      primary: "anthropic/claude-haiku-4-5-20251001",
-      fallbacks: [
-        "openai/gpt-4o-mini",
-        "gemini/gemini-2.0-flash",
-      ],
+  "agents": {
+    "defaults": {
+      "model": {
+        "primary": "anthropic/claude-haiku-4-5-20251001",
+        "fallbacks": [
+          "openai/gpt-4o-mini",
+          "gemini/gemini-2.0-flash"
+        ]
+      },
+      "workspace": "./.openclaw/workspace",
+      "compaction": {
+        "mode": "safeguard"
+      }
     },
+    "list": [
+      {
+        "id": "main",
+        "identity": {
+          "name": "السكرتير الذكي",
+          "theme": "a bilingual (Arabic/English) personal AI secretary — professional, concise, and helpful",
+          "emoji": "🤖"
+        }
+      }
+    ]
   },
-
-  // ── Environment variables ────────────────────────────────────────────────────
-  // Fallback values — real keys should come from the shell environment or .env
-  env: {
-    // AI Providers — set these in your .env
-    // ANTHROPIC_API_KEY: "sk-ant-...",
-    // OPENAI_API_KEY: "sk-...",
-    // GEMINI_API_KEY: "...",
+  "messages": {
+    "queue": {
+      "mode": "collect",
+      "debounceMs": 500
+    }
   },
-
-  // ── Messaging Channels ───────────────────────────────────────────────────────
-  channels: {
-    // Telegram — set TELEGRAM_TOKEN in .env
-    telegram: {
-      enabled: true,
-      botToken: { source: "env", key: "TELEGRAM_TOKEN" },
-      // Allow all users (remove allowFrom to restrict access)
-      groupPolicy: "open",
-      groups: {
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "channels": {
+    "whatsapp": {
+      "enabled": false,
+      "dmPolicy": "pairing",
+      "groupPolicy": "allowlist",
+      "debounceMs": 0,
+      "mediaMaxMb": 50
+    },
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "pairing",
+      "groups": {
         "*": {
-          requireMention: true,
-        },
+          "requireMention": true
+        }
       },
+      "groupPolicy": "open",
+      "streaming": "off"
     },
-
-    // Discord — set DISCORD_BOT_TOKEN in .env
-    discord: {
-      enabled: true,
-      token: { source: "env", key: "DISCORD_BOT_TOKEN" },
-      dm: {
-        enabled: true,
+    "discord": {
+      "enabled": true,
+      "groupPolicy": "allowlist",
+      "dm": {
+        "enabled": true
       },
-      guilds: {
-        // "*" means all servers the bot is in
+      "guilds": {
         "*": {
-          requireMention: false,
-        },
+          "requireMention": false
+        }
       },
-    },
-
-    // WhatsApp — requires WhatsApp pairing (run: openclaw channels login)
-    whatsapp: {
-      enabled: false,
-      // Once paired, set your number here to restrict who can message:
-      // allowFrom: ["+966XXXXXXXXX"],
-    },
+      "streaming": "off"
+    }
   },
-
-  // ── Routing ──────────────────────────────────────────────────────────────────
-  routing: {
-    queue: {
-      mode: "collect",
-      debounceMs: 500,
-    },
+  "gateway": {
+    "mode": "local",
+    "auth": {
+      "mode": "token",
+      "token": "05408b8a4790e6048f38003f61d86b503fa159ed698498e8"
+    }
   },
-
-  // ── Logging ──────────────────────────────────────────────────────────────────
-  logging: {
-    level: "info",
-    file: "./.openclaw/openclaw.log",
-    consoleStyle: "pretty",
-  },
+  "meta": {
+    "lastTouchedVersion": "2026.3.1",
+    "lastTouchedAt": "2026-03-03T23:59:53.682Z"
+  }
 }
