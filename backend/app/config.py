@@ -45,10 +45,11 @@ class Settings(BaseSettings):
     WHATSAPP_PHONE_NUMBER_ID: Optional[str] = None
     WHATSAPP_VERIFY_TOKEN: str = "smart_secretary_verify_2026"
 
-    # ── Twilio (alternative WhatsApp) ────────────────────────────────────────
+    # ── Twilio (alternative WhatsApp + Verify OTP) ───────────────────────────
     TWILIO_ACCOUNT_SID: Optional[str] = None
     TWILIO_AUTH_TOKEN: Optional[str] = None
     TWILIO_WHATSAPP_NUMBER: Optional[str] = None
+    TWILIO_VERIFY_SERVICE_SID: Optional[str] = None
 
     # ── Discord (OpenClaw-style messaging platform) ──────────────────────────
     DISCORD_BOT_TOKEN: Optional[str] = None
