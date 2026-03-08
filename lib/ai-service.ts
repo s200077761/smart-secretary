@@ -23,17 +23,15 @@ export const SECRETARY_SYSTEM_PROMPT = `أنت "السكرتير الذكي"، �
 You are "The Smart Secretary", an intelligent Arabic-language assistant.
 Always respond in Arabic unless the user writes in English.`;
 
-const DEFAULT_GEMINI_KEY = "AIzaSyA4HhADKfJESaZUWFmBrPX_JXtTXwAM_Xw";
-
 async function getApiKeys(): Promise<{ geminiKey: string }> {
   try {
     const stored = await AsyncStorage.getItem(SETTINGS_KEY);
     if (stored) {
       const settings = JSON.parse(stored);
-      return { geminiKey: settings.geminiKey || DEFAULT_GEMINI_KEY };
+      if (settings.geminiKey) return { geminiKey: settings.geminiKey };
     }
   } catch {}
-  return { geminiKey: DEFAULT_GEMINI_KEY };
+  return { geminiKey: "" };
 }
 
 async function callGeminiDirect(
@@ -82,15 +80,39 @@ async function callBackend(message: string, systemPrompt?: string): Promise<AIRe
   return { content: data.content || "" };
 }
 
+async function callServerProxy(message: string, systemPrompt?: string): Promise<AIResponse> {
+  const response = await fetch("/api/chat", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, systemPrompt }),
+  });
+  const data = await response.json();
+  if (!response.ok || data.error) {
+    throw new Error(data.error || `Server error ${response.status}`);
+  }
+  return { content: data.content };
+}
+
 async function callAI(message: string, systemPrompt?: string): Promise<AIResponse> {
-  const { geminiKey } = await getApiKeys();
+  // Try server-side proxy first (keeps API key secure)
   try {
-    return await callGeminiDirect(message, systemPrompt, geminiKey);
-  } catch (error) {
-    console.error("Gemini error:", error);
+    return await callServerProxy(message, systemPrompt);
+  } catch (serverErr) {
+    // Fallback: try user-provided key directly
+    const { geminiKey } = await getApiKeys();
+    if (geminiKey) {
+      try {
+        return await callGeminiDirect(message, systemPrompt, geminiKey);
+      } catch (error) {
+        return {
+          content: "",
+          error: error instanceof Error ? error.message : "حدث خطأ في الاتصال بـ Gemini",
+        };
+      }
+    }
     return {
       content: "",
-      error: error instanceof Error ? error.message : "حدث خطأ في الاتصال بـ Gemini",
+      error: "خدمة الذكاء الاصطناعي غير متاحة حالياً. أضف مفتاح Gemini في الإعدادات.",
     };
   }
 }
