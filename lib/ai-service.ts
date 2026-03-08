@@ -39,7 +39,7 @@ async function callGeminiDirect(
   systemPrompt?: string,
   apiKey?: string
 ): Promise<AIResponse> {
-  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-001:generateContent?key=${apiKey}`;
   const body: Record<string, unknown> = {
     contents: [{ parts: [{ text: message }] }],
     generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
