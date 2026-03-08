@@ -23,15 +23,17 @@ export const SECRETARY_SYSTEM_PROMPT = `أنت "السكرتير الذكي"، �
 You are "The Smart Secretary", an intelligent Arabic-language assistant.
 Always respond in Arabic unless the user writes in English.`;
 
-async function getApiKeys(): Promise<{ geminiKey?: string }> {
+const DEFAULT_GEMINI_KEY = "AIzaSyA4HhADKfJESaZUWFmBrPX_JXtTXwAM_Xw";
+
+async function getApiKeys(): Promise<{ geminiKey: string }> {
   try {
     const stored = await AsyncStorage.getItem(SETTINGS_KEY);
     if (stored) {
       const settings = JSON.parse(stored);
-      return { geminiKey: settings.geminiKey || "" };
+      return { geminiKey: settings.geminiKey || DEFAULT_GEMINI_KEY };
     }
   } catch {}
-  return {};
+  return { geminiKey: DEFAULT_GEMINI_KEY };
 }
 
 async function callGeminiDirect(
@@ -82,26 +84,13 @@ async function callBackend(message: string, systemPrompt?: string): Promise<AIRe
 
 async function callAI(message: string, systemPrompt?: string): Promise<AIResponse> {
   const { geminiKey } = await getApiKeys();
-
-  if (geminiKey) {
-    try {
-      return await callGeminiDirect(message, systemPrompt, geminiKey);
-    } catch (error) {
-      console.error("Gemini error:", error);
-      return {
-        content: "",
-        error: error instanceof Error ? error.message : "حدث خطأ في الاتصال",
-      };
-    }
-  }
-
   try {
-    return await callBackend(message, systemPrompt);
+    return await callGeminiDirect(message, systemPrompt, geminiKey);
   } catch (error) {
-    console.error("Backend error:", error);
+    console.error("Gemini error:", error);
     return {
       content: "",
-      error: "أضف مفتاح Google Gemini API في الإعدادات للمتابعة (مجاني من aistudio.google.com)",
+      error: error instanceof Error ? error.message : "حدث خطأ في الاتصال بـ Gemini",
     };
   }
 }
