@@ -1,6 +1,10 @@
 import { AIResponse, ChatMessage, CodeMode } from "./types";
+import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const BACKEND_URL = "https://s200077761-smart-secretary-api.hf.space";
+const HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions";
+const HF_MODEL = "Qwen/Qwen2.5-7B-Instruct";
+const SETTINGS_KEY = "smart_secretary_settings";
 
 // Default system prompt for the secretary
 export const SECRETARY_SYSTEM_PROMPT = `أنت "السكرتير الذكي"، مساعد ذكي باللغة العربية.
@@ -22,29 +26,83 @@ export const SECRETARY_SYSTEM_PROMPT = `أنت "السكرتير الذكي"، �
 You are "The Smart Secretary", an intelligent Arabic-language assistant.
 Always respond in Arabic unless the user writes in English.`;
 
-async function callBackend(message: string, systemPrompt?: string): Promise<AIResponse> {
+async function getHFToken(): Promise<string | null> {
   try {
-    const response = await fetch(`${BACKEND_URL}/api/chat/`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        message,
-        agent_system_prompt: systemPrompt || null,
-      }),
-    });
-
-    if (!response.ok) {
-      const err = await response.json().catch(() => ({}));
-      throw new Error(err.detail || `API error ${response.status}`);
+    const stored = await AsyncStorage.getItem(SETTINGS_KEY);
+    if (stored) {
+      const settings = JSON.parse(stored);
+      return settings.hfToken || null;
     }
+  } catch {}
+  return null;
+}
 
-    const data = await response.json();
-    return { content: data.content || "" };
+async function callHFDirect(
+  message: string,
+  systemPrompt?: string,
+  hfToken?: string
+): Promise<AIResponse> {
+  const headers: Record<string, string> = { "Content-Type": "application/json" };
+  if (hfToken) headers["Authorization"] = `Bearer ${hfToken}`;
+
+  const messages: { role: string; content: string }[] = [];
+  if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+  messages.push({ role: "user", content: message });
+
+  const response = await fetch(HF_ROUTER_URL, {
+    method: "POST",
+    headers,
+    body: JSON.stringify({ model: HF_MODEL, messages, max_tokens: 2048, temperature: 0.7 }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${response.status}`);
+  }
+
+  const data = await response.json();
+  return { content: data.choices?.[0]?.message?.content || "" };
+}
+
+async function callBackend(message: string, systemPrompt?: string): Promise<AIResponse> {
+  const response = await fetch(`${BACKEND_URL}/api/chat/`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, agent_system_prompt: systemPrompt || null }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.detail || `API error ${response.status}`);
+  }
+
+  const data = await response.json();
+  return { content: data.content || "" };
+}
+
+async function callAI(message: string, systemPrompt?: string): Promise<AIResponse> {
+  const hfToken = await getHFToken();
+
+  if (hfToken) {
+    try {
+      return await callHFDirect(message, systemPrompt, hfToken);
+    } catch (error) {
+      console.error("HF direct API error:", error);
+      return {
+        content: "",
+        error: error instanceof Error ? error.message : "حدث خطأ في الاتصال",
+      };
+    }
+  }
+
+  // Fallback to backend
+  try {
+    return await callBackend(message, systemPrompt);
   } catch (error) {
     console.error("Backend API error:", error);
     return {
       content: "",
-      error: error instanceof Error ? error.message : "حدث خطأ غير متوقع",
+      error: "الخادم غير متاح حالياً. أضف مفتاح HuggingFace API في الإعدادات للمتابعة.",
     };
   }
 }
@@ -55,7 +113,7 @@ export async function sendChatMessage(
   systemPrompt?: string
 ): Promise<AIResponse> {
   const lastUser = [...messages].reverse().find((m) => m.role === "user");
-  return callBackend(lastUser?.content ?? "", systemPrompt || SECRETARY_SYSTEM_PROMPT);
+  return callAI(lastUser?.content ?? "", systemPrompt || SECRETARY_SYSTEM_PROMPT);
 }
 
 // Agent task execution
@@ -63,7 +121,7 @@ export async function executeAgentTask(
   agentPrompt: string,
   userInput: string
 ): Promise<AIResponse> {
-  return callBackend(userInput, agentPrompt);
+  return callAI(userInput, agentPrompt);
 }
 
 // Web search with AI summary
@@ -74,7 +132,7 @@ export async function generateSearchSummary(
   const systemPrompt = `أنت مساعد ذكي يلخص نتائج البحث.
 قدّم ملخصاً مختصراً ومفيداً للنتائج المعطاة. أجب بنفس لغة الاستعلام.`;
 
-  return callBackend(
+  return callAI(
     `الاستعلام: ${query}\n\nنتائج البحث:\n${searchResults}\n\nقدّم ملخصاً مفيداً:`,
     systemPrompt
   );
@@ -92,5 +150,5 @@ export async function processCode(
     explain: `أنت مبرمج ومعلم خبير. اشرح كود ${language} التالي بالتفصيل: ما يفعله، كيف يعمل، المفاهيم المستخدمة.`,
   };
 
-  return callBackend(input, prompts[mode]);
+  return callAI(input, prompts[mode]);
 }

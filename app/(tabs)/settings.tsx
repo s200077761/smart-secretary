@@ -8,6 +8,7 @@ import {
   Switch,
   Alert,
   Platform,
+  TextInput,
 } from "react-native";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
@@ -24,12 +25,14 @@ interface Settings {
   enableHaptics: boolean;
   responseStyle: "concise" | "detailed";
   aiProvider: AIProvider;
+  hfToken: string;
 }
 
 const defaultSettings: Settings = {
   enableHaptics: true,
   responseStyle: "detailed",
   aiProvider: "huggingface",
+  hfToken: "",
 };
 
 const AI_PROVIDERS: { id: AIProvider; label: string; labelAr: string; model: string }[] = [
@@ -50,6 +53,8 @@ export default function SettingsScreen() {
   const { clearMessages } = useChat();
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [showProviderPicker, setShowProviderPicker] = useState(false);
+  const [tokenInput, setTokenInput] = useState("");
+  const [showToken, setShowToken] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -59,7 +64,9 @@ export default function SettingsScreen() {
     try {
       const stored = await AsyncStorage.getItem(SETTINGS_KEY);
       if (stored) {
-        setSettings({ ...defaultSettings, ...JSON.parse(stored) });
+        const parsed = JSON.parse(stored);
+        setSettings({ ...defaultSettings, ...parsed });
+        setTokenInput(parsed.hfToken || "");
       }
     } catch (error) {
       console.error("Failed to load settings:", error);
@@ -73,6 +80,11 @@ export default function SettingsScreen() {
     } catch (error) {
       console.error("Failed to save settings:", error);
     }
+  };
+
+  const handleSaveToken = () => {
+    saveSettings({ ...settings, hfToken: tokenInput.trim() });
+    Alert.alert("تم الحفظ", tokenInput.trim() ? "تم حفظ مفتاح API بنجاح" : "تم مسح مفتاح API");
   };
 
   const handleToggleHaptics = () => {
@@ -255,7 +267,41 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* App Settings Section */}
+        {/* HuggingFace API Token Section */}
+        <Text style={[styles.sectionTitle, { color: colors.muted }]}>مفتاح HuggingFace API</Text>
+        <View style={[styles.tokenCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.tokenHint, { color: colors.muted }]}>
+            أضف مفتاح API للاتصال المباشر بـ HuggingFace (احصل عليه من huggingface.co/settings/tokens)
+          </Text>
+          <View style={styles.tokenInputRow}>
+            <TextInput
+              style={[styles.tokenInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+              value={tokenInput}
+              onChangeText={setTokenInput}
+              placeholder="hf_..."
+              placeholderTextColor={colors.muted}
+              secureTextEntry={!showToken}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Pressable
+              onPress={() => setShowToken(!showToken)}
+              style={[styles.tokenToggle, { backgroundColor: colors.primary + "20" }]}
+            >
+              <Text style={[styles.tokenToggleText, { color: colors.primary }]}>
+                {showToken ? "إخفاء" : "إظهار"}
+              </Text>
+            </Pressable>
+          </View>
+          <Pressable
+            onPress={handleSaveToken}
+            style={[styles.tokenSaveButton, { backgroundColor: colors.primary }]}
+          >
+            <Text style={styles.tokenSaveButtonText}>حفظ المفتاح</Text>
+          </Pressable>
+        </View>
+
+                {/* App Settings Section */}
         <Text style={[styles.sectionTitle, { color: colors.muted }]}>إعدادات التطبيق</Text>
         <View style={styles.section}>
           {renderSettingItem({
@@ -446,6 +492,51 @@ const styles = StyleSheet.create({
     paddingHorizontal: 6,
     paddingVertical: 2,
     borderRadius: 4,
+  },
+  tokenCard: {
+    padding: 14,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 10,
+  },
+  tokenHint: {
+    fontSize: 12,
+    textAlign: "right",
+    lineHeight: 18,
+  },
+  tokenInputRow: {
+    flexDirection: "row",
+    gap: 8,
+    alignItems: "center",
+  },
+  tokenInput: {
+    flex: 1,
+    height: 44,
+    borderWidth: 1,
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    fontSize: 14,
+    fontFamily: Platform.OS === "ios" ? "Courier New" : "monospace",
+    textAlign: "left",
+  },
+  tokenToggle: {
+    paddingHorizontal: 10,
+    paddingVertical: 8,
+    borderRadius: 8,
+  },
+  tokenToggleText: {
+    fontSize: 12,
+    fontWeight: "600",
+  },
+  tokenSaveButton: {
+    padding: 12,
+    borderRadius: 10,
+    alignItems: "center",
+  },
+  tokenSaveButtonText: {
+    color: "#fff",
+    fontSize: 15,
+    fontWeight: "600",
   },
   descriptionCard: {
     marginTop: 24,
