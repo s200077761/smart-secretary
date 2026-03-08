@@ -26,6 +26,7 @@ interface Settings {
   responseStyle: "concise" | "detailed";
   aiProvider: AIProvider;
   hfToken: string;
+  zhipuToken: string;
 }
 
 const defaultSettings: Settings = {
@@ -33,6 +34,7 @@ const defaultSettings: Settings = {
   responseStyle: "detailed",
   aiProvider: "huggingface",
   hfToken: "",
+  zhipuToken: "",
 };
 
 const AI_PROVIDERS: { id: AIProvider; label: string; labelAr: string; model: string }[] = [
@@ -55,6 +57,8 @@ export default function SettingsScreen() {
   const [showProviderPicker, setShowProviderPicker] = useState(false);
   const [tokenInput, setTokenInput] = useState("");
   const [showToken, setShowToken] = useState(false);
+  const [zhipuTokenInput, setZhipuTokenInput] = useState("");
+  const [showZhipuToken, setShowZhipuToken] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -67,6 +71,7 @@ export default function SettingsScreen() {
         const parsed = JSON.parse(stored);
         setSettings({ ...defaultSettings, ...parsed });
         setTokenInput(parsed.hfToken || "");
+        setZhipuTokenInput(parsed.zhipuToken || "");
       }
     } catch (error) {
       console.error("Failed to load settings:", error);
@@ -80,6 +85,11 @@ export default function SettingsScreen() {
     } catch (error) {
       console.error("Failed to save settings:", error);
     }
+  };
+
+  const handleSaveZhipuToken = () => {
+    saveSettings({ ...settings, zhipuToken: zhipuTokenInput.trim() });
+    Alert.alert("تم الحفظ", zhipuTokenInput.trim() ? "تم حفظ مفتاح ZhipuAI بنجاح" : "تم مسح مفتاح ZhipuAI");
   };
 
   const handleSaveToken = () => {
@@ -267,7 +277,41 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* HuggingFace API Token Section */}
+        {/* ZhipuAI (z.ai) API Token Section */}
+        <Text style={[styles.sectionTitle, { color: colors.muted }]}>مفتاح ZhipuAI (z.ai) — الأولوية القصوى</Text>
+        <View style={[styles.tokenCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
+          <Text style={[styles.tokenHint, { color: colors.muted }]}>
+            مفتاح z.ai / ZhipuAI (GLM-4-Flash) — يُستخدم بأولوية أعلى من HuggingFace
+          </Text>
+          <View style={styles.tokenInputRow}>
+            <TextInput
+              style={[styles.tokenInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
+              value={zhipuTokenInput}
+              onChangeText={setZhipuTokenInput}
+              placeholder="xxxxxxxx.xxxxxxxx"
+              placeholderTextColor={colors.muted}
+              secureTextEntry={!showZhipuToken}
+              autoCapitalize="none"
+              autoCorrect={false}
+            />
+            <Pressable
+              onPress={() => setShowZhipuToken(!showZhipuToken)}
+              style={[styles.tokenToggle, { backgroundColor: "#7C3AED20" }]}
+            >
+              <Text style={[styles.tokenToggleText, { color: "#7C3AED" }]}>
+                {showZhipuToken ? "إخفاء" : "إظهار"}
+              </Text>
+            </Pressable>
+          </View>
+          <Pressable
+            onPress={handleSaveZhipuToken}
+            style={[styles.tokenSaveButton, { backgroundColor: "#7C3AED" }]}
+          >
+            <Text style={styles.tokenSaveButtonText}>حفظ مفتاح ZhipuAI</Text>
+          </Pressable>
+        </View>
+
+                {/* HuggingFace API Token Section */}
         <Text style={[styles.sectionTitle, { color: colors.muted }]}>مفتاح HuggingFace API</Text>
         <View style={[styles.tokenCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.tokenHint, { color: colors.muted }]}>

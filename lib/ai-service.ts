@@ -4,6 +4,8 @@ import AsyncStorage from "@react-native-async-storage/async-storage";
 const BACKEND_URL = "https://s200077761-smart-secretary-api.hf.space";
 const HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions";
 const HF_MODEL = "Qwen/Qwen2.5-7B-Instruct";
+const ZHIPU_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
+const ZHIPU_MODEL = "glm-4-flash";
 const SETTINGS_KEY = "smart_secretary_settings";
 
 // Default system prompt for the secretary
@@ -26,15 +28,42 @@ export const SECRETARY_SYSTEM_PROMPT = `أنت "السكرتير الذكي"، �
 You are "The Smart Secretary", an intelligent Arabic-language assistant.
 Always respond in Arabic unless the user writes in English.`;
 
-async function getHFToken(): Promise<string | null> {
+async function getTokens(): Promise<{ zhipuToken?: string; hfToken?: string }> {
   try {
     const stored = await AsyncStorage.getItem(SETTINGS_KEY);
     if (stored) {
       const settings = JSON.parse(stored);
-      return settings.hfToken || null;
+      return { zhipuToken: settings.zhipuToken || "", hfToken: settings.hfToken || "" };
     }
   } catch {}
-  return null;
+  return {};
+}
+
+async function callZhipu(
+  message: string,
+  systemPrompt?: string,
+  apiKey?: string
+): Promise<AIResponse> {
+  const messages: { role: string; content: string }[] = [];
+  if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
+  messages.push({ role: "user", content: message });
+
+  const response = await fetch(ZHIPU_BASE_URL, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+      "Authorization": `Bearer ${apiKey}`,
+    },
+    body: JSON.stringify({ model: ZHIPU_MODEL, messages, max_tokens: 2048, temperature: 0.7 }),
+  });
+
+  if (!response.ok) {
+    const err = await response.json().catch(() => ({}));
+    throw new Error(err.error?.message || `API error ${response.status}`);
+  }
+
+  const data = await response.json();
+  return { content: data.choices?.[0]?.message?.content || "" };
 }
 
 async function callHFDirect(
@@ -81,8 +110,22 @@ async function callBackend(message: string, systemPrompt?: string): Promise<AIRe
 }
 
 async function callAI(message: string, systemPrompt?: string): Promise<AIResponse> {
-  const hfToken = await getHFToken();
+  const { zhipuToken, hfToken } = await getTokens();
 
+  // Priority 1: ZhipuAI (z.ai)
+  if (zhipuToken) {
+    try {
+      return await callZhipu(message, systemPrompt, zhipuToken);
+    } catch (error) {
+      console.error("ZhipuAI error:", error);
+      return {
+        content: "",
+        error: error instanceof Error ? error.message : "حدث خطأ في الاتصال بـ ZhipuAI",
+      };
+    }
+  }
+
+  // Priority 2: HuggingFace direct
   if (hfToken) {
     try {
       return await callHFDirect(message, systemPrompt, hfToken);
@@ -95,14 +138,14 @@ async function callAI(message: string, systemPrompt?: string): Promise<AIRespons
     }
   }
 
-  // Fallback to backend
+  // Priority 3: Backend fallback
   try {
     return await callBackend(message, systemPrompt);
   } catch (error) {
     console.error("Backend API error:", error);
     return {
       content: "",
-      error: "الخادم غير متاح حالياً. أضف مفتاح HuggingFace API في الإعدادات للمتابعة.",
+      error: "الخادم غير متاح. أضف مفتاح ZhipuAI أو HuggingFace في الإعدادات.",
     };
   }
 }
