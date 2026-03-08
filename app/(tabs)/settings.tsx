@@ -55,6 +55,8 @@ export default function SettingsScreen() {
   const [showProviderPicker, setShowProviderPicker] = useState(false);
   const [geminiKeyInput, setGeminiKeyInput] = useState("");
   const [showGeminiKey, setShowGeminiKey] = useState(false);
+  const [geminiTestStatus, setGeminiTestStatus] = useState<"idle" | "loading" | "ok" | "error">("idle");
+  const [geminiTestMsg, setGeminiTestMsg] = useState("");
 
   useEffect(() => {
     loadSettings();
@@ -85,6 +87,29 @@ export default function SettingsScreen() {
   const handleSaveGeminiKey = () => {
     saveSettings({ ...settings, geminiKey: geminiKeyInput.trim() });
     Alert.alert("تم الحفظ", geminiKeyInput.trim() ? "تم حفظ مفتاح Gemini بنجاح" : "تم مسح مفتاح Gemini");
+  };
+
+  const handleTestGemini = async () => {
+    const key = geminiKeyInput.trim();
+    if (!key) { Alert.alert("خطأ", "أدخل المفتاح أولاً"); return; }
+    setGeminiTestStatus("loading");
+    setGeminiTestMsg("جارٍ الاختبار...");
+    try {
+      const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${key}`;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ contents: [{ parts: [{ text: "قل: مرحبا" }] }], generationConfig: { maxOutputTokens: 10 } }),
+      });
+      const data = await res.json();
+      if (!res.ok) throw new Error(data.error?.message || `Error ${res.status}`);
+      const reply = data.candidates?.[0]?.content?.parts?.[0]?.text || "OK";
+      setGeminiTestStatus("ok");
+      setGeminiTestMsg(`✓ يعمل! الرد: ${reply.slice(0, 50)}`);
+    } catch (e: unknown) {
+      setGeminiTestStatus("error");
+      setGeminiTestMsg(`✗ خطأ: ${e instanceof Error ? e.message : String(e)}`);
+    }
   };
 
   const handleToggleHaptics = () => {
@@ -268,14 +293,28 @@ export default function SettingsScreen() {
                   </Text>
                 </Pressable>
               </View>
-              <Pressable
-                onPress={handleSaveGeminiKey}
-                style={[styles.tokenSaveButton, { backgroundColor: "#4285F4" }]}
-              >
-                <Text style={styles.tokenSaveButtonText}>حفظ المفتاح</Text>
-              </Pressable>
-              {settings.geminiKey ? (
-                <Text style={{ color: "#22c55e", fontSize: 12, marginTop: 6, textAlign: "right" }}>✓ تم حفظ المفتاح</Text>
+              <View style={{ flexDirection: "row", gap: 8, marginTop: 8 }}>
+                <Pressable
+                  onPress={handleSaveGeminiKey}
+                  style={[styles.tokenSaveButton, { backgroundColor: "#4285F4", flex: 1 }]}
+                >
+                  <Text style={styles.tokenSaveButtonText}>حفظ</Text>
+                </Pressable>
+                <Pressable
+                  onPress={handleTestGemini}
+                  style={[styles.tokenSaveButton, { backgroundColor: "#22c55e", flex: 1 }]}
+                >
+                  <Text style={styles.tokenSaveButtonText}>
+                    {geminiTestStatus === "loading" ? "..." : "اختبار"}
+                  </Text>
+                </Pressable>
+              </View>
+              {geminiTestMsg ? (
+                <Text style={{ color: geminiTestStatus === "ok" ? "#22c55e" : "#ef4444", fontSize: 12, marginTop: 6 }}>
+                  {geminiTestMsg}
+                </Text>
+              ) : settings.geminiKey ? (
+                <Text style={{ color: "#22c55e", fontSize: 12, marginTop: 6 }}>✓ تم حفظ المفتاح</Text>
               ) : null}
             </View>
           )}
