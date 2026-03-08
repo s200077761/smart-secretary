@@ -1,0 +1,74 @@
+{
+  "apiRoutes": [
+    {
+      "file": "_expo/functions/api/chat+api.js",
+      "page": "/api/chat",
+      "namedRegex": "^/api/chat(?:/)?$",
+      "routeKeys": {}
+    }
+  ],
+  "htmlRoutes": [
+    {
+      "file": "./(tabs)/index.tsx",
+      "page": "/(tabs)/index",
+      "namedRegex": "^(?:/\\(tabs\\))?(?:/)?$",
+      "routeKeys": {}
+    },
+    {
+      "file": "./(tabs)/code.tsx",
+      "page": "/(tabs)/code",
+      "namedRegex": "^(?:/\\(tabs\\))?/code(?:/)?$",
+      "routeKeys": {}
+    },
+    {
+      "file": "./(tabs)/search.tsx",
+      "page": "/(tabs)/search",
+      "namedRegex": "^(?:/\\(tabs\\))?/search(?:/)?$",
+      "routeKeys": {}
+    },
+    {
+      "file": "./(tabs)/agents.tsx",
+      "page": "/(tabs)/agents",
+      "namedRegex": "^(?:/\\(tabs\\))?/agents(?:/)?$",
+      "routeKeys": {}
+    },
+    {
+      "file": "./(tabs)/settings.tsx",
+      "page": "/(tabs)/settings",
+      "namedRegex": "^(?:/\\(tabs\\))?/settings(?:/)?$",
+      "routeKeys": {}
+    },
+    {
+      "file": "expo-router/build/views/Sitemap.js",
+      "page": "/_sitemap",
+      "namedRegex": "^/_sitemap(?:/)?$",
+      "routeKeys": {},
+      "generated": true
+    },
+    {
+      "file": "./dev/theme-lab.tsx",
+      "page": "/dev/theme-lab",
+      "namedRegex": "^/dev/theme\\-lab(?:/)?$",
+      "routeKeys": {}
+    },
+    {
+      "file": "./oauth/callback.tsx",
+      "page": "/oauth/callback",
+      "namedRegex": "^/oauth/callback(?:/)?$",
+      "routeKeys": {}
+    }
+  ],
+  "notFoundRoutes": [
+    {
+      "file": "expo-router/build/views/Unmatched.js",
+      "page": "/+not-found",
+      "namedRegex": "^(?:/(?<notfound>.+?))?(?:/)?$",
+      "routeKeys": {
+        "notfound": "not-found"
+      },
+      "generated": true
+    }
+  ],
+  "redirects": [],
+  "rewrites": []
+}
