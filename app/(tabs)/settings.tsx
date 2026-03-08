@@ -25,16 +25,14 @@ interface Settings {
   enableHaptics: boolean;
   responseStyle: "concise" | "detailed";
   aiProvider: AIProvider;
-  hfToken: string;
-  zhipuToken: string;
+  geminiKey: string;
 }
 
 const defaultSettings: Settings = {
   enableHaptics: true,
   responseStyle: "detailed",
   aiProvider: "huggingface",
-  hfToken: "",
-  zhipuToken: "",
+  geminiKey: "",
 };
 
 const AI_PROVIDERS: { id: AIProvider; label: string; labelAr: string; model: string }[] = [
@@ -55,10 +53,8 @@ export default function SettingsScreen() {
   const { clearMessages } = useChat();
   const [settings, setSettings] = useState<Settings>(defaultSettings);
   const [showProviderPicker, setShowProviderPicker] = useState(false);
-  const [tokenInput, setTokenInput] = useState("");
-  const [showToken, setShowToken] = useState(false);
-  const [zhipuTokenInput, setZhipuTokenInput] = useState("");
-  const [showZhipuToken, setShowZhipuToken] = useState(false);
+  const [geminiKeyInput, setGeminiKeyInput] = useState("");
+  const [showGeminiKey, setShowGeminiKey] = useState(false);
 
   useEffect(() => {
     loadSettings();
@@ -70,8 +66,7 @@ export default function SettingsScreen() {
       if (stored) {
         const parsed = JSON.parse(stored);
         setSettings({ ...defaultSettings, ...parsed });
-        setTokenInput(parsed.hfToken || "");
-        setZhipuTokenInput(parsed.zhipuToken || "");
+        setGeminiKeyInput(parsed.geminiKey || "");
       }
     } catch (error) {
       console.error("Failed to load settings:", error);
@@ -87,14 +82,9 @@ export default function SettingsScreen() {
     }
   };
 
-  const handleSaveZhipuToken = () => {
-    saveSettings({ ...settings, zhipuToken: zhipuTokenInput.trim() });
-    Alert.alert("تم الحفظ", zhipuTokenInput.trim() ? "تم حفظ مفتاح ZhipuAI بنجاح" : "تم مسح مفتاح ZhipuAI");
-  };
-
-  const handleSaveToken = () => {
-    saveSettings({ ...settings, hfToken: tokenInput.trim() });
-    Alert.alert("تم الحفظ", tokenInput.trim() ? "تم حفظ مفتاح API بنجاح" : "تم مسح مفتاح API");
+  const handleSaveGeminiKey = () => {
+    saveSettings({ ...settings, geminiKey: geminiKeyInput.trim() });
+    Alert.alert("تم الحفظ", geminiKeyInput.trim() ? "تم حفظ مفتاح Gemini بنجاح" : "تم مسح مفتاح Gemini");
   };
 
   const handleToggleHaptics = () => {
@@ -277,75 +267,41 @@ export default function SettingsScreen() {
           </View>
         </View>
 
-        {/* ZhipuAI (z.ai) API Token Section */}
-        <Text style={[styles.sectionTitle, { color: colors.muted }]}>مفتاح ZhipuAI (z.ai) — الأولوية القصوى</Text>
+        {/* Google Gemini API Key */}
+        <Text style={[styles.sectionTitle, { color: colors.muted }]}>مفتاح Google Gemini API (مجاني)</Text>
         <View style={[styles.tokenCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
           <Text style={[styles.tokenHint, { color: colors.muted }]}>
-            مفتاح z.ai / ZhipuAI (GLM-4-Flash) — يُستخدم بأولوية أعلى من HuggingFace
+            احصل على مفتاح مجاني من: aistudio.google.com/apikey
           </Text>
           <View style={styles.tokenInputRow}>
             <TextInput
               style={[styles.tokenInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
-              value={zhipuTokenInput}
-              onChangeText={setZhipuTokenInput}
-              placeholder="xxxxxxxx.xxxxxxxx"
+              value={geminiKeyInput}
+              onChangeText={setGeminiKeyInput}
+              placeholder="AIza..."
               placeholderTextColor={colors.muted}
-              secureTextEntry={!showZhipuToken}
+              secureTextEntry={!showGeminiKey}
               autoCapitalize="none"
               autoCorrect={false}
             />
             <Pressable
-              onPress={() => setShowZhipuToken(!showZhipuToken)}
-              style={[styles.tokenToggle, { backgroundColor: "#7C3AED20" }]}
+              onPress={() => setShowGeminiKey(!showGeminiKey)}
+              style={[styles.tokenToggle, { backgroundColor: "#4285F420" }]}
             >
-              <Text style={[styles.tokenToggleText, { color: "#7C3AED" }]}>
-                {showZhipuToken ? "إخفاء" : "إظهار"}
+              <Text style={[styles.tokenToggleText, { color: "#4285F4" }]}>
+                {showGeminiKey ? "إخفاء" : "إظهار"}
               </Text>
             </Pressable>
           </View>
           <Pressable
-            onPress={handleSaveZhipuToken}
-            style={[styles.tokenSaveButton, { backgroundColor: "#7C3AED" }]}
+            onPress={handleSaveGeminiKey}
+            style={[styles.tokenSaveButton, { backgroundColor: "#4285F4" }]}
           >
-            <Text style={styles.tokenSaveButtonText}>حفظ مفتاح ZhipuAI</Text>
+            <Text style={styles.tokenSaveButtonText}>حفظ مفتاح Gemini</Text>
           </Pressable>
         </View>
 
-                {/* HuggingFace API Token Section */}
-        <Text style={[styles.sectionTitle, { color: colors.muted }]}>مفتاح HuggingFace API</Text>
-        <View style={[styles.tokenCard, { backgroundColor: colors.surface, borderColor: colors.border }]}>
-          <Text style={[styles.tokenHint, { color: colors.muted }]}>
-            أضف مفتاح API للاتصال المباشر بـ HuggingFace (احصل عليه من huggingface.co/settings/tokens)
-          </Text>
-          <View style={styles.tokenInputRow}>
-            <TextInput
-              style={[styles.tokenInput, { color: colors.foreground, borderColor: colors.border, backgroundColor: colors.background }]}
-              value={tokenInput}
-              onChangeText={setTokenInput}
-              placeholder="hf_..."
-              placeholderTextColor={colors.muted}
-              secureTextEntry={!showToken}
-              autoCapitalize="none"
-              autoCorrect={false}
-            />
-            <Pressable
-              onPress={() => setShowToken(!showToken)}
-              style={[styles.tokenToggle, { backgroundColor: colors.primary + "20" }]}
-            >
-              <Text style={[styles.tokenToggleText, { color: colors.primary }]}>
-                {showToken ? "إخفاء" : "إظهار"}
-              </Text>
-            </Pressable>
-          </View>
-          <Pressable
-            onPress={handleSaveToken}
-            style={[styles.tokenSaveButton, { backgroundColor: colors.primary }]}
-          >
-            <Text style={styles.tokenSaveButtonText}>حفظ المفتاح</Text>
-          </Pressable>
-        </View>
-
-                {/* App Settings Section */}
+                        {/* App Settings Section */}
         <Text style={[styles.sectionTitle, { color: colors.muted }]}>إعدادات التطبيق</Text>
         <View style={styles.section}>
           {renderSettingItem({
