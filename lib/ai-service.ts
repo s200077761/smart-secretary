@@ -6,6 +6,7 @@ const HF_ROUTER_URL = "https://router.huggingface.co/v1/chat/completions";
 const HF_MODEL = "Qwen/Qwen2.5-7B-Instruct";
 const ZHIPU_BASE_URL = "https://open.bigmodel.cn/api/paas/v4/chat/completions";
 const ZHIPU_MODEL = "glm-4-flash";
+const DEFAULT_ZHIPU_KEY = "26ee4b1ad4194c549920514b419eeaf9.T4NlDRbZ1ygimqTf";
 const SETTINGS_KEY = "smart_secretary_settings";
 
 // Default system prompt for the secretary
@@ -33,10 +34,10 @@ async function getTokens(): Promise<{ zhipuToken?: string; hfToken?: string }> {
     const stored = await AsyncStorage.getItem(SETTINGS_KEY);
     if (stored) {
       const settings = JSON.parse(stored);
-      return { zhipuToken: settings.zhipuToken || "", hfToken: settings.hfToken || "" };
+      return { zhipuToken: settings.zhipuToken || DEFAULT_ZHIPU_KEY, hfToken: settings.hfToken || "" };
     }
   } catch {}
-  return {};
+  return { zhipuToken: DEFAULT_ZHIPU_KEY };
 }
 
 async function callZhipu(
