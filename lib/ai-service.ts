@@ -2,8 +2,6 @@ import { AIResponse, ChatMessage, CodeMode } from "./types";
 import AsyncStorage from "@react-native-async-storage/async-storage";
 
 const BACKEND_URL = "https://s200077761-smart-secretary-api.hf.space";
-const GEMINI_BASE_URL = "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions";
-const GEMINI_MODEL = "gemini-2.0-flash";
 const SETTINGS_KEY = "smart_secretary_settings";
 
 export const SECRETARY_SYSTEM_PROMPT = `أنت "السكرتير الذكي"، مساعد ذكي باللغة العربية.
@@ -36,31 +34,24 @@ async function getApiKeys(): Promise<{ geminiKey?: string }> {
   return {};
 }
 
-async function callGemini(
+async function callGeminiViaBackend(
   message: string,
   systemPrompt?: string,
   apiKey?: string
 ): Promise<AIResponse> {
-  const messages: { role: string; content: string }[] = [];
-  if (systemPrompt) messages.push({ role: "system", content: systemPrompt });
-  messages.push({ role: "user", content: message });
-
-  const response = await fetch(GEMINI_BASE_URL, {
+  const response = await fetch(`${BACKEND_URL}/api/chat/gemini`, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-      "Authorization": `Bearer ${apiKey}`,
-    },
-    body: JSON.stringify({ model: GEMINI_MODEL, messages, max_tokens: 2048, temperature: 0.7 }),
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ message, gemini_key: apiKey, system_prompt: systemPrompt }),
   });
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    throw new Error(err.error?.message || `API error ${response.status}`);
+    throw new Error(err.detail || `API error ${response.status}`);
   }
 
   const data = await response.json();
-  return { content: data.choices?.[0]?.message?.content || "" };
+  return { content: data.content || "" };
 }
 
 async function callBackend(message: string, systemPrompt?: string): Promise<AIResponse> {
@@ -84,7 +75,7 @@ async function callAI(message: string, systemPrompt?: string): Promise<AIRespons
 
   if (geminiKey) {
     try {
-      return await callGemini(message, systemPrompt, geminiKey);
+      return await callGeminiViaBackend(message, systemPrompt, geminiKey);
     } catch (error) {
       console.error("Gemini error:", error);
       return {

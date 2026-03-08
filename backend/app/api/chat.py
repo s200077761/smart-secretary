@@ -2,9 +2,11 @@
 
 import uuid
 import json
+from typing import Optional
 
 from fastapi import APIRouter, HTTPException, WebSocket, WebSocketDisconnect
 from langchain.schema import HumanMessage, SystemMessage
+from pydantic import BaseModel
 
 from app.llm import get_llm
 from app.models.schemas import ChatRequest, ChatResponse, AGENT_PROMPTS
@@ -17,6 +19,37 @@ _BASE_SYSTEM = """أنت السكرتير الذكي، مساعد شخصي ذك�
 - تساعد في المهام اليومية والمهنية بكفاءة
 - تكون ودوداً ومحترفاً في كل الأوقات
 - لا تستخدم الإنجليزية إلا إذا طُلب منك ذلك صراحةً"""
+
+
+class KeyedChatRequest(BaseModel):
+    message: str
+    gemini_key: str
+    system_prompt: Optional[str] = None
+    session_id: Optional[str] = None
+
+
+@router.post("/gemini", response_model=ChatResponse)
+async def chat_with_gemini_key(req: KeyedChatRequest) -> ChatResponse:
+    """Proxy: call Google Gemini with a user-supplied API key."""
+    if not req.gemini_key:
+        raise HTTPException(status_code=400, detail="gemini_key is required")
+    try:
+        from langchain_google_genai import ChatGoogleGenerativeAI
+        llm = ChatGoogleGenerativeAI(
+            model="gemini-2.0-flash",
+            google_api_key=req.gemini_key,
+            temperature=0.7,
+            max_output_tokens=2048,
+        )
+        system = req.system_prompt or _BASE_SYSTEM
+        messages = [SystemMessage(content=system), HumanMessage(content=req.message)]
+        response = await llm.ainvoke(messages)
+        return ChatResponse(
+            content=str(response.content),
+            session_id=req.session_id or str(uuid.uuid4()),
+        )
+    except Exception as exc:
+        raise HTTPException(status_code=500, detail=str(exc)) from exc
 
 
 @router.post("/", response_model=ChatResponse)
