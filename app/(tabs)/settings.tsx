@@ -241,6 +241,44 @@ export default function SettingsScreen() {
               ))}
             </View>
           )}
+
+          {/* Gemini key input — shown inline when Gemini is selected */}
+          {settings.aiProvider === "gemini" && (
+            <View style={{ marginTop: 12, padding: 12, backgroundColor: "#4285F410", borderRadius: 8 }}>
+              <Text style={[styles.tokenHint, { color: colors.muted, marginBottom: 8 }]}>
+                مفتاح Google Gemini API — احصل عليه مجاناً من aistudio.google.com/apikey
+              </Text>
+              <View style={styles.tokenInputRow}>
+                <TextInput
+                  style={[styles.tokenInput, { color: colors.foreground, borderColor: "#4285F440", backgroundColor: colors.background }]}
+                  value={geminiKeyInput}
+                  onChangeText={setGeminiKeyInput}
+                  placeholder="AIzaSy..."
+                  placeholderTextColor={colors.muted}
+                  secureTextEntry={!showGeminiKey}
+                  autoCapitalize="none"
+                  autoCorrect={false}
+                />
+                <Pressable
+                  onPress={() => setShowGeminiKey(!showGeminiKey)}
+                  style={[styles.tokenToggle, { backgroundColor: "#4285F420" }]}
+                >
+                  <Text style={[styles.tokenToggleText, { color: "#4285F4" }]}>
+                    {showGeminiKey ? "إخفاء" : "إظهار"}
+                  </Text>
+                </Pressable>
+              </View>
+              <Pressable
+                onPress={handleSaveGeminiKey}
+                style={[styles.tokenSaveButton, { backgroundColor: "#4285F4" }]}
+              >
+                <Text style={styles.tokenSaveButtonText}>حفظ المفتاح</Text>
+              </Pressable>
+              {settings.geminiKey ? (
+                <Text style={{ color: "#22c55e", fontSize: 12, marginTop: 6, textAlign: "right" }}>✓ تم حفظ المفتاح</Text>
+              ) : null}
+            </View>
+          )}
         </View>
 
         {/* OpenClaw Messaging Platforms */}

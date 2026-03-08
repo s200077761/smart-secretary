@@ -34,24 +34,34 @@ async function getApiKeys(): Promise<{ geminiKey?: string }> {
   return {};
 }
 
-async function callGeminiViaBackend(
+async function callGeminiDirect(
   message: string,
   systemPrompt?: string,
   apiKey?: string
 ): Promise<AIResponse> {
-  const response = await fetch(`${BACKEND_URL}/api/chat/gemini`, {
+  const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey}`;
+  const body: Record<string, unknown> = {
+    contents: [{ parts: [{ text: message }] }],
+    generationConfig: { maxOutputTokens: 2048, temperature: 0.7 },
+  };
+  if (systemPrompt) {
+    body.systemInstruction = { parts: [{ text: systemPrompt }] };
+  }
+
+  const response = await fetch(url, {
     method: "POST",
     headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ message, gemini_key: apiKey, system_prompt: systemPrompt }),
+    body: JSON.stringify(body),
   });
 
   if (!response.ok) {
     const err = await response.json().catch(() => ({}));
-    throw new Error(err.detail || `API error ${response.status}`);
+    throw new Error(err.error?.message || `Gemini API error ${response.status}`);
   }
 
   const data = await response.json();
-  return { content: data.content || "" };
+  const text = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+  return { content: text };
 }
 
 async function callBackend(message: string, systemPrompt?: string): Promise<AIResponse> {
@@ -75,7 +85,7 @@ async function callAI(message: string, systemPrompt?: string): Promise<AIRespons
 
   if (geminiKey) {
     try {
-      return await callGeminiViaBackend(message, systemPrompt, geminiKey);
+      return await callGeminiDirect(message, systemPrompt, geminiKey);
     } catch (error) {
       console.error("Gemini error:", error);
       return {
