@@ -51,8 +51,8 @@ export default function CodeScreen() {
   const colors = useColors();
   const [mode, setMode] = useState<CodeMode>("generate");
   const [language, setLanguage] = useState("javascript");
-  const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
+  const [codeInput, setCodeInput] = useState("");
+  const [codeOutput, setCodeOutput] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showLanguages, setShowLanguages] = useState(false);
   const [copied, setCopied] = useState(false);
@@ -62,33 +62,33 @@ export default function CodeScreen() {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     }
     setMode(newMode);
-    setOutput("");
+    setCodeOutput("");
   };
 
-  const handleProcess = async () => {
-    if (!input.trim()) return;
+  const handleProcessCode = async () => {
+    if (!codeInput.trim()) return;
 
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     }
 
     setIsLoading(true);
-    setOutput("");
+    setCodeOutput("");
 
     try {
-      const response = await processCode(mode, input.trim(), language);
-      setOutput(response.content || response.error || "حدث خطأ غير متوقع");
+      const response = await processCode(mode, codeInput.trim(), language);
+      setCodeOutput(response.content || response.error || "حدث خطأ غير متوقع");
     } catch (error) {
-      setOutput("عذراً، حدث خطأ في معالجة الكود. يرجى المحاولة مرة أخرى.");
+      setCodeOutput("عذراً، حدث خطأ في معالجة الكود. يرجى المحاولة مرة أخرى.");
     } finally {
       setIsLoading(false);
     }
   };
 
   const handleCopy = async () => {
-    if (!output) return;
+    if (!codeOutput) return;
 
-    await Clipboard.setStringAsync(output);
+    await Clipboard.setStringAsync(codeOutput);
     setCopied(true);
 
     if (Platform.OS !== "web") {
@@ -206,8 +206,8 @@ export default function CodeScreen() {
             ]}
             placeholder={PLACEHOLDERS[mode]}
             placeholderTextColor={colors.muted}
-            value={input}
-            onChangeText={setInput}
+            value={codeInput}
+            onChangeText={setCodeInput}
             multiline
             numberOfLines={8}
             textAlignVertical="top"
@@ -217,12 +217,12 @@ export default function CodeScreen() {
 
         {/* Process Button */}
         <Pressable
-          onPress={handleProcess}
-          disabled={!input.trim() || isLoading}
+          onPress={handleProcessCode}
+          disabled={!codeInput.trim() || isLoading}
           style={({ pressed }) => [
             styles.processButton,
             { backgroundColor: colors.primary },
-            (!input.trim() || isLoading) && { opacity: 0.5 },
+            (!codeInput.trim() || isLoading) && { opacity: 0.5 },
             pressed && { transform: [{ scale: 0.98 }] },
           ]}
         >
@@ -234,7 +234,7 @@ export default function CodeScreen() {
         </Pressable>
 
         {/* Output */}
-        {output && (
+        {codeOutput && (
           <View style={styles.outputSection}>
             <View style={styles.outputHeader}>
               <Text style={[styles.sectionLabel, { color: colors.foreground }]}>النتيجة</Text>
@@ -266,7 +266,7 @@ export default function CodeScreen() {
                     mode === "generate" && styles.codeText,
                   ]}
                 >
-                  {output}
+                  {codeOutput}
                 </Text>
               </ScrollView>
             </View>

@@ -12,11 +12,11 @@ import { Platform } from "react-native";
 import type { Metrics } from "react-native-safe-area-context";
 
 // Debug logging with timestamps
-const DEBUG = true;
-const log = (msg: string) => {
-  if (!DEBUG) return;
-  const ts = new Date().toISOString();
-  console.log(`[ManusRuntime ${ts}] ${msg}`);
+const isDebugLoggingEnabled = true;
+const logDebugMessage = (msg: string) => {
+  if (!isDebugLoggingEnabled) return;
+  const timestamp = new Date().toISOString();
+  console.log(`[ManusRuntime ${timestamp}] ${msg}`);
 };
 
 type MessageType = "appDevServerReady";
@@ -55,10 +55,10 @@ function sendToParent(type: MessageType, payload: Record<string, unknown> = {}):
     payload: { type, from: "content", to: "container", payload },
   };
   window.parent.postMessage(message, "*");
-  log(`Sent to parent: ${type}`);
+  logDebugMessage(`Sent to parent: ${type}`);
 }
 
-let initialized = false;
+let isInitialized = false;
 let safeAreaCallback: SafeAreaCallback | null = null;
 
 function isValidInsets(payload: Record<string, unknown>): payload is SafeAreaInsets {
@@ -82,7 +82,7 @@ function handleMessage(event: MessageEvent<unknown>): void {
     const insets = payload.payload;
     const frame = { x: 0, y: 0, width: window.innerWidth, height: window.innerHeight };
     safeAreaCallback({ insets, frame });
-    log(
+    logDebugMessage(
       `Received safe area insets from parent: top=${insets.top}, bottom=${insets.bottom}, left=${insets.left}, right=${insets.right}`,
     );
   }
@@ -105,10 +105,10 @@ export function subscribeSafeAreaInsets(callback: SafeAreaCallback): () => void 
  */
 export function initManusRuntime(): void {
   if (!isWeb() || !isInIframe()) return;
-  if (initialized) return;
-  initialized = true;
+  if (isInitialized) return;
+  isInitialized = true;
 
-  log("initManusRuntime called");
+  logDebugMessage("initManusRuntime called");
   window.addEventListener("message", handleMessage);
   sendToParent("appDevServerReady", {});
 }

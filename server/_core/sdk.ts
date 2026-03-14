@@ -86,14 +86,14 @@ class SDKServer {
   ): string | null {
     if (fallback && fallback.length > 0) return fallback;
     if (!Array.isArray(platforms) || platforms.length === 0) return null;
-    const set = new Set<string>(platforms.filter((p): p is string => typeof p === "string"));
-    if (set.has("REGISTERED_PLATFORM_EMAIL")) return "email";
-    if (set.has("REGISTERED_PLATFORM_GOOGLE")) return "google";
-    if (set.has("REGISTERED_PLATFORM_APPLE")) return "apple";
-    if (set.has("REGISTERED_PLATFORM_MICROSOFT") || set.has("REGISTERED_PLATFORM_AZURE"))
+    const platformSet = new Set<string>(platforms.filter((p): p is string => typeof p === "string"));
+    if (platformSet.has("REGISTERED_PLATFORM_EMAIL")) return "email";
+    if (platformSet.has("REGISTERED_PLATFORM_GOOGLE")) return "google";
+    if (platformSet.has("REGISTERED_PLATFORM_APPLE")) return "apple";
+    if (platformSet.has("REGISTERED_PLATFORM_MICROSOFT") || platformSet.has("REGISTERED_PLATFORM_AZURE"))
       return "microsoft";
-    if (set.has("REGISTERED_PLATFORM_GITHUB")) return "github";
-    const first = Array.from(set)[0];
+    if (platformSet.has("REGISTERED_PLATFORM_GITHUB")) return "github";
+    const first = Array.from(platformSet)[0];
     return first ? first.toLowerCase() : null;
   }
 
