@@ -1,13 +1,18 @@
 {
   "expo": {
+    "description": "السكرتير الذكي - مساعد ذكي للإنتاجية والتنظيم",
     "name": "السكرتير الذكي",
     "slug": "smart-secretary",
+    "privacy": "public",
+    "owner": "s200077761",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/images/icon.png",
     "scheme": "manus20251231052635",
     "userInterfaceStyle": "automatic",
+    "primaryColor": "#0a7ea4",
     "newArchEnabled": true,
+    "runtimeVersion": "1.0.0",
     "ios": {
       "supportsTablet": true,
       "bundleIdentifier": "space.manus.smart.secretary.t20251231052635"
@@ -81,6 +86,12 @@
     "experiments": {
       "typedRoutes": true,
       "reactCompiler": true
+    },
+    "pricing": {
+      "model": "subscription",
+      "currency": "SAR",
+      "monthlyPrice": 10,
+      "description": "Monthly subscription for full access to all features"
     }
   }
 }
