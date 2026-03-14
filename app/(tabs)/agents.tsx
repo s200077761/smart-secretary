@@ -27,27 +27,27 @@ export default function AgentsScreen() {
   const colors = useColors();
   const insets = useSafeAreaInsets();
   const [selectedAgent, setSelectedAgent] = useState<Agent | null>(null);
-  const [input, setInput] = useState("");
-  const [output, setOutput] = useState("");
+  const [agentTaskInput, setAgentTaskInput] = useState("");
+  const [agentTaskResult, setAgentTaskResult] = useState("");
   const [isLoading, setIsLoading] = useState(false);
   const [showResult, setShowResult] = useState(false);
 
   const handleAgentSelect = (agent: Agent) => {
     setSelectedAgent(agent);
-    setInput("");
-    setOutput("");
+    setAgentTaskInput("");
+    setAgentTaskResult("");
     setShowResult(false);
   };
 
   const handleCloseModal = () => {
     setSelectedAgent(null);
-    setInput("");
-    setOutput("");
+    setAgentTaskInput("");
+    setAgentTaskResult("");
     setShowResult(false);
   };
 
-  const handleExecute = async () => {
-    if (!selectedAgent || !input.trim()) return;
+  const handleExecuteAgentTask = async () => {
+    if (!selectedAgent || !agentTaskInput.trim()) return;
 
     if (Platform.OS !== "web") {
       Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -57,10 +57,10 @@ export default function AgentsScreen() {
     setShowResult(true);
 
     try {
-      const response = await executeAgentTask(selectedAgent.systemPrompt, input.trim());
-      setOutput(response.content || response.error || "حدث خطأ غير متوقع");
+      const response = await executeAgentTask(selectedAgent.systemPrompt, agentTaskInput.trim());
+      setAgentTaskResult(response.content || response.error || "حدث خطأ غير متوقع");
     } catch (error) {
-      setOutput("عذراً، حدث خطأ في تنفيذ المهمة. يرجى المحاولة مرة أخرى.");
+      setAgentTaskResult("عذراً، حدث خطأ في تنفيذ المهمة. يرجى المحاولة مرة أخرى.");
     } finally {
       setIsLoading(false);
     }
@@ -142,8 +142,8 @@ export default function AgentsScreen() {
               ]}
               placeholder="اكتب طلبك هنا..."
               placeholderTextColor={colors.muted}
-              value={input}
-              onChangeText={setInput}
+              value={agentTaskInput}
+              onChangeText={setAgentTaskInput}
               multiline
               numberOfLines={4}
               textAlignVertical="top"
@@ -152,12 +152,12 @@ export default function AgentsScreen() {
 
             {/* Execute Button */}
             <Pressable
-              onPress={handleExecute}
-              disabled={!input.trim() || isLoading}
+              onPress={handleExecuteAgentTask}
+              disabled={!agentTaskInput.trim() || isLoading}
               style={({ pressed }) => [
                 styles.executeButton,
                 { backgroundColor: colors.primary },
-                (!input.trim() || isLoading) && { opacity: 0.5 },
+                (!agentTaskInput.trim() || isLoading) && { opacity: 0.5 },
                 pressed && { transform: [{ scale: 0.98 }] },
               ]}
             >
@@ -179,7 +179,7 @@ export default function AgentsScreen() {
                   {isLoading ? (
                     <ActivityIndicator size="large" color={colors.primary} />
                   ) : (
-                    <Text style={[styles.resultText, { color: colors.foreground }]}>{output}</Text>
+                    <Text style={[styles.resultText, { color: colors.foreground }]}>{agentTaskResult}</Text>
                   )}
                 </View>
               </View>
