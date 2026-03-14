@@ -21,17 +21,24 @@ const DEFAULT_SETTINGS: ProviderSettings = {
   enableFallback: true,
 };
 
+// In-memory cache — invalidated on every write so callers always see fresh
+// data while avoiding redundant AsyncStorage reads within the same request.
+let settingsCache: ProviderSettings | null = null;
+
 /**
  * Get provider settings
  */
 export async function getProviderSettings(): Promise<ProviderSettings> {
+  if (settingsCache !== null) return settingsCache;
   try {
     const data = await AsyncStorage.getItem(PROVIDER_SETTINGS_KEY);
     if (!data) {
       await saveProviderSettings(DEFAULT_SETTINGS);
       return DEFAULT_SETTINGS;
     }
-    return JSON.parse(data);
+    const parsed: ProviderSettings = JSON.parse(data);
+    settingsCache = parsed;
+    return parsed;
   } catch (error) {
     console.error('Failed to get provider settings:', error);
     return DEFAULT_SETTINGS;
@@ -44,6 +51,7 @@ export async function getProviderSettings(): Promise<ProviderSettings> {
 export async function saveProviderSettings(settings: ProviderSettings): Promise<void> {
   try {
     await AsyncStorage.setItem(PROVIDER_SETTINGS_KEY, JSON.stringify(settings));
+    settingsCache = settings;
   } catch (error) {
     console.error('Failed to save provider settings:', error);
   }
